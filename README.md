@@ -1,7 +1,6 @@
 # SmartCampus
 
-Plateforme numérique de campus (projet fil rouge des TP DevOps).
-
+Titre : SmartCampus, application de gestion des salles
 ## Fonctionnalités (Sprint 1)
 - Connexion des étudiants avec e-mail institutionnel et mot de passe (SC-4)
 
