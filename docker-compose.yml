@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: smartcampus-db
+    environment:
+      POSTGRES_DB: smartcampus
+      POSTGRES_USER: smartcampus
+      POSTGRES_PASSWORD: smartcampus
+    ports:
+      - "5433:5432"
+    volumes:
+      - smartcampus-data:/var/lib/postgresql/data
+
+volumes:
+  smartcampus-data:

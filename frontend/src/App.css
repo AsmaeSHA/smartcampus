@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --paper: #eef1ea;
+  --paper-deep: #e2e8df;
+  --ink: #14312e;
+  --ink-soft: #4b6360;
+  --line: #bcc8be;
+  --campus-orange: #e0653a;
+  --error: #a8321c;
+  --serif: 'Newsreader', Georgia, serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Mise en page : panneau de marque à gauche, formulaire à droite */
+.shell {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  min-height: 100vh;
+}
+
+.campus {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.campus h1 {
+  margin: 0 0 28px;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  line-height: 1.1;
+  max-width: 14ch;
+}
+
+.campus-map {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  display: block;
+}
+
+
+.panel {
+  display: grid;
+  place-items: center;
+  padding: 48px 32px;
+  background: var(--paper);
+}
+
+/* Formulaire */
+.login-form {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.login-form header h2 {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 2.1rem;
+  line-height: 1.1;
+}
+
+.login-form header p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.field input {
+  width: 100%;
+  padding: 10px 0 10px;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--line);
+  border-radius: 0;
+  transition: border-color 0.2s;
+}
+
+.field input::placeholder {
+  color: #8a9a92;
+}
+
+.field input:focus {
+  outline: none;
+  border-bottom-color: var(--campus-orange);
+  box-shadow: 0 1px 0 var(--campus-orange);
+}
+
+.password-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-row input {
+  padding-right: 90px;
+}
+
+.toggle {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.toggle:hover { color: var(--ink); }
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--error);
+  background: rgba(168, 50, 28, 0.08);
+  color: var(--error);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.error svg { flex: none; margin-top: 1px; }
+
+.submit {
+  margin-top: 8px;
+  padding: 14px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit:hover:not(:disabled) { background: #1d4541; }
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Focus visible au clavier pour tous les éléments interactifs */
+button:focus-visible {
+  outline: 3px solid var(--campus-orange);
+  outline-offset: 3px;
+}
+
+/* Tablette et mobile : une seule colonne, carte réduite */
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .campus { padding: 24px; gap: 20px; }
+  .campus h1 { font-size: 1.6rem; margin-bottom: 16px; }
+  .campus-map { max-width: 260px; }
+  .panel { padding: 32px 20px 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
