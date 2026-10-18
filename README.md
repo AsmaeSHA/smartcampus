@@ -13,3 +13,4 @@ Plateforme numérique de campus (projet fil rouge des TP DevOps).
 
 ## Suivi du travail
 Chaque branche, commit et Pull Request contient la clé Jira du ticket (ex. `SC-11`).
+Test de pull : modification faite directement sur GitHub.
