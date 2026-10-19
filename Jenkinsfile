@@ -22,7 +22,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh 'echo "start running the jar file"'
-                    sh 'nohup java -jar target/*.jar > app.log 2>&1 &'
+                    sh 'export JENKINS_NODE_COOKIE=dontKillMe && nohup java -jar target/*.jar > app.log 2>&1 < /dev/null &'
                 }
             }
         }
