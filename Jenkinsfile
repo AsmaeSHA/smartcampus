@@ -1,9 +1,10 @@
+
 pipeline {
     agent any
 
     tools {
-        maven 'Maven' 
-        jdk 'JDK21'
+        jdk 'JDK17'
+        maven 'Maven'
     }
 
     stages {
@@ -12,18 +13,19 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Build (Maven)') {
+
+        stage('Build') {
             steps {
                 dir('backend') {
-                    sh 'mvn -B -Dmaven.test.skip=TRUE clean install'
+                    sh 'mvn -B clean package -DskipTests'
                 }
             }
         }
-        stage('Run App (JAR)') {
+
+        stage('Test') {
             steps {
                 dir('backend') {
-                    sh 'echo "start running the jar file"'
-                    sh 'export JENKINS_NODE_COOKIE=dontKillMe && nohup java -jar target/*.jar > app.log 2>&1 < /dev/null &'
+                    sh 'mvn -B test'
                 }
             }
         }
