@@ -27,7 +27,7 @@ class LoginServiceTest {
         when(users.findByEmail(EMAIL))
                 .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
 
-        assertEquals(LoginResult.INVALID_CREDENTIALS, service.login(EMAIL, PASSWORD));
+        assertEquals(LoginResult.SUCCESS, service.login(EMAIL, PASSWORD));
     }
 
     @Test
