@@ -17,4 +17,4 @@ Chaque branche, commit et Pull Request contient la clé Jira du ticket (ex. `SC-
 
 ## CI/CD
 
-Continuous integration is managed by Jenkins.
+Continuous integration is managed by Jenkins. 
