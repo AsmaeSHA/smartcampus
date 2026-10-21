@@ -11,6 +11,7 @@ import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class LoginService {
     private final Map<String, Integer> consecutiveFailures = new ConcurrentHashMap<>();
     private final Map<String, Instant> lockedUntil = new ConcurrentHashMap<>();
 
+    @Autowired
     public LoginService(UserRepository users,
                         PasswordEncoder passwordEncoder,
                         @Value("${smartcampus.allowed-domain}") String allowedDomain) {
