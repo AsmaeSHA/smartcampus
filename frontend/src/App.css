@@ -210,3 +210,24 @@ button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* Session connectee (SC-5) */
+.session {
+  display: grid;
+  gap: 12px;
+}
+
+.logout {
+  justify-self: start;
+  padding: 10px 16px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.logout:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
