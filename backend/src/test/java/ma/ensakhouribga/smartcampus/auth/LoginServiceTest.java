@@ -19,8 +19,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class LoginServiceTest {
 
-    private static final String DOMAIN = "ensakhouribga.ma";
-    private static final String EMAIL = "asmae@ensakhouribga.ma";
+    private static final String DOMAIN = "usms.ma";
+    private static final String EMAIL = "asmae@usms.ma";
     private static final String PASSWORD = "secret123";
 
     private final UserRepository users = mock(UserRepository.class);
@@ -71,7 +71,7 @@ class LoginServiceTest {
         when(users.findByEmail(EMAIL))
                 .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
 
-        assertEquals(LoginResult.SUCCESS, service.login("  ASMAE@ENSAKHOURIBGA.MA ", PASSWORD));
+        assertEquals(LoginResult.SUCCESS, service.login("  ASMAE@USMS.MA ", PASSWORD));
     }
 
     @Test
