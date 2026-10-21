@@ -3,8 +3,10 @@ package ma.ensakhouribga.smartcampus.auth;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.util.Locale;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +42,27 @@ public class AuthController {
             case ACCOUNT_INACTIVE -> response(HttpStatus.FORBIDDEN,
                     "Ce compte est désactivé");
         };
+    }
+
+    /** Ferme la session de l'utilisateur. Sans session, la réponse est identique. */
+    @PostMapping("/logout")
+    public ResponseEntity<LoginResponse> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return ResponseEntity.ok(new LoginResponse("Déconnexion réussie", "/connexion"));
+    }
+
+    /** Indique l'utilisateur connecté. Renvoie 401 si la session est absente ou fermée. */
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, String>> moi(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Object email = session == null ? null : session.getAttribute(SESSION_EMAIL);
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(Map.of("email", email.toString()));
     }
 
     /**
