@@ -41,6 +41,8 @@ public class AuthController {
                     "Veuillez utiliser votre e-mail institutionnel");
             case ACCOUNT_INACTIVE -> response(HttpStatus.FORBIDDEN,
                     "Ce compte est désactivé");
+            case TEMPORARILY_LOCKED -> response(HttpStatus.TOO_MANY_REQUESTS,
+                    "Trop de tentatives. Réessayez dans quelques minutes.");
         };
     }
 

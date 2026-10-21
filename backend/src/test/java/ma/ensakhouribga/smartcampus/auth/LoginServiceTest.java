@@ -6,6 +6,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
@@ -67,5 +72,78 @@ class LoginServiceTest {
                 .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
 
         assertEquals(LoginResult.SUCCESS, service.login("  ASMAE@ENSAKHOURIBGA.MA ", PASSWORD));
+    }
+
+    @Test
+    void compteVerrouilleApresTroisEchecsMemeAvecBonMotDePasse() {
+        HorlogeDeTest horloge = new HorlogeDeTest(Instant.parse("2026-10-21T10:00:00Z"));
+        LoginService avecHorloge = new LoginService(users, encoder, DOMAIN, horloge);
+        when(users.findByEmail(EMAIL))
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+
+        for (int i = 0; i < LoginService.MAX_FAILURES; i++) {
+            assertEquals(LoginResult.INVALID_CREDENTIALS, avecHorloge.login(EMAIL, "mauvais"));
+        }
+
+        assertEquals(LoginResult.TEMPORARILY_LOCKED, avecHorloge.login(EMAIL, PASSWORD));
+    }
+
+    @Test
+    void compteDeverrouilleApresLaDureeDeVerrouillage() {
+        HorlogeDeTest horloge = new HorlogeDeTest(Instant.parse("2026-10-21T10:00:00Z"));
+        LoginService avecHorloge = new LoginService(users, encoder, DOMAIN, horloge);
+        when(users.findByEmail(EMAIL))
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+
+        for (int i = 0; i < LoginService.MAX_FAILURES; i++) {
+            avecHorloge.login(EMAIL, "mauvais");
+        }
+        horloge.avancer(LoginService.LOCK_DURATION.plusSeconds(1));
+
+        assertEquals(LoginResult.SUCCESS, avecHorloge.login(EMAIL, PASSWORD));
+    }
+
+    @Test
+    void uneConnexionReussieRemetLesEchecsAZero() {
+        HorlogeDeTest horloge = new HorlogeDeTest(Instant.parse("2026-10-21T10:00:00Z"));
+        LoginService avecHorloge = new LoginService(users, encoder, DOMAIN, horloge);
+        when(users.findByEmail(EMAIL))
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+
+        avecHorloge.login(EMAIL, "mauvais");
+        avecHorloge.login(EMAIL, "mauvais");
+        assertEquals(LoginResult.SUCCESS, avecHorloge.login(EMAIL, PASSWORD));
+        avecHorloge.login(EMAIL, "mauvais");
+        avecHorloge.login(EMAIL, "mauvais");
+
+        assertEquals(LoginResult.INVALID_CREDENTIALS, avecHorloge.login(EMAIL, "mauvais"));
+    }
+
+    /** Horloge contrôlée par le test, pour avancer le temps sans attendre. */
+    static final class HorlogeDeTest extends Clock {
+        private Instant instant;
+
+        HorlogeDeTest(Instant depart) {
+            this.instant = depart;
+        }
+
+        void avancer(Duration duree) {
+            instant = instant.plus(duree);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return instant;
+        }
     }
 }
