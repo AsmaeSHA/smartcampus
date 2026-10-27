@@ -14,3 +14,7 @@ Titre : SmartCampus, plateforme de services du campus
 
 ## Suivi du travail
 Chaque branche, commit et Pull Request contient la clé Jira du ticket (ex. `SC-11`).
+
+## CI/CD
+
+Continuous integration is managed by Jenkins. 
