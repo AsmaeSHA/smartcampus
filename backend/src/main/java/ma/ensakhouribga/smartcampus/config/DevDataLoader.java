@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Profile("dev")
 public class DevDataLoader implements CommandLineRunner {
 
-    static final String TEST_EMAIL = "test@ensakhouribga.ma";
+    static final String TEST_EMAIL = "test@usms.ma";
     static final String TEST_PASSWORD = "test1234";
 
     private final UserRepository users;

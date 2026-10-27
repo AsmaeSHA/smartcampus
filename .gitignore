@@ -6,6 +6,7 @@ backend/target/
 # Node / React
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
 
 # IDE et système
 .idea/
