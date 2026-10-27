@@ -1,0 +1,4 @@
+src
+.mvn
+*.log
+hs_err_pid*
