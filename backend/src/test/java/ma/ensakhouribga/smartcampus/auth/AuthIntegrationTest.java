@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ma.ensakhouribga.smartcampus.user.Role;
 import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,8 @@ class AuthIntegrationTest {
     @BeforeEach
     void creerCompte() {
         if (users.findByEmail(EMAIL).isEmpty()) {
-            users.save(new User(EMAIL, passwordEncoder.encode(PASSWORD), true));
+            users.save(new User(EMAIL, passwordEncoder.encode(PASSWORD), "Integration", "Test",
+                    Role.ADMINISTRATEUR, true));
         }
     }
 
@@ -65,7 +67,8 @@ class AuthIntegrationTest {
 
         mvc.perform(get("/api/auth/me").session(session))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value(EMAIL));
+                .andExpect(jsonPath("$.email").value(EMAIL))
+                .andExpect(jsonPath("$.role").value("ADMINISTRATEUR"));
     }
 
     @Test

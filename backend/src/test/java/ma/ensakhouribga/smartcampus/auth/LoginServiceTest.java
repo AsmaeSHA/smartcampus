@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Optional;
+import ma.ensakhouribga.smartcampus.user.Role;
 import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ class LoginServiceTest {
     @Test
     void connexionReussiteAvecBonsIdentifiants() {
         when(users.findByEmail(EMAIL))
-                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, true)));
 
         assertEquals(LoginResult.SUCCESS, service.login(EMAIL, PASSWORD));
     }
@@ -38,7 +39,7 @@ class LoginServiceTest {
     @Test
     void mauvaisMotDePasseEstRefuse() {
         when(users.findByEmail(EMAIL))
-                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, true)));
 
         assertEquals(LoginResult.INVALID_CREDENTIALS, service.login(EMAIL, "mauvais"));
     }
@@ -61,7 +62,7 @@ class LoginServiceTest {
     @Test
     void compteDesactiveNePeutPasSeConnecter() {
         when(users.findByEmail(EMAIL))
-                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), false)));
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, false)));
 
         assertEquals(LoginResult.ACCOUNT_INACTIVE, service.login(EMAIL, PASSWORD));
     }
@@ -69,7 +70,7 @@ class LoginServiceTest {
     @Test
     void emailEnMajusculesEtEspacesEstAccepte() {
         when(users.findByEmail(EMAIL))
-                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, true)));
 
         assertEquals(LoginResult.SUCCESS, service.login("  ASMAE@USMS.MA ", PASSWORD));
     }
@@ -79,7 +80,7 @@ class LoginServiceTest {
         HorlogeDeTest horloge = new HorlogeDeTest(Instant.parse("2026-10-21T10:00:00Z"));
         LoginService avecHorloge = new LoginService(users, encoder, DOMAIN, horloge);
         when(users.findByEmail(EMAIL))
-                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, true)));
 
         for (int i = 0; i < LoginService.MAX_FAILURES; i++) {
             assertEquals(LoginResult.INVALID_CREDENTIALS, avecHorloge.login(EMAIL, "mauvais"));
@@ -93,7 +94,7 @@ class LoginServiceTest {
         HorlogeDeTest horloge = new HorlogeDeTest(Instant.parse("2026-10-21T10:00:00Z"));
         LoginService avecHorloge = new LoginService(users, encoder, DOMAIN, horloge);
         when(users.findByEmail(EMAIL))
-                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, true)));
 
         for (int i = 0; i < LoginService.MAX_FAILURES; i++) {
             avecHorloge.login(EMAIL, "mauvais");
@@ -108,7 +109,7 @@ class LoginServiceTest {
         HorlogeDeTest horloge = new HorlogeDeTest(Instant.parse("2026-10-21T10:00:00Z"));
         LoginService avecHorloge = new LoginService(users, encoder, DOMAIN, horloge);
         when(users.findByEmail(EMAIL))
-                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), true)));
+                .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, true)));
 
         avecHorloge.login(EMAIL, "mauvais");
         avecHorloge.login(EMAIL, "mauvais");

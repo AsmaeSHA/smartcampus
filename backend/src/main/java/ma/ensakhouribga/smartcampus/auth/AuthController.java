@@ -3,7 +3,6 @@ package ma.ensakhouribga.smartcampus.auth;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.util.Locale;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,13 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    /** Attribut de session qui garde l'e-mail de l'utilisateur connecté. */
-    static final String SESSION_EMAIL = "utilisateurEmail";
-
     private final LoginService loginService;
+    private final UtilisateurCourant utilisateurCourant;
 
-    public AuthController(LoginService loginService) {
+    public AuthController(LoginService loginService, UtilisateurCourant utilisateurCourant) {
         this.loginService = loginService;
+        this.utilisateurCourant = utilisateurCourant;
     }
 
     @PostMapping("/login")
@@ -56,15 +54,15 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse("Déconnexion réussie", "/connexion"));
     }
 
-    /** Indique l'utilisateur connecté. Renvoie 401 si la session est absente ou fermée. */
+    /**
+     * Indique l'utilisateur connecté et son rôle, pour que le front adapte l'affichage.
+     * Renvoie 401 si la session est absente ou fermée, ou si le compte a été désactivé entre-temps.
+     */
     @GetMapping("/me")
-    public ResponseEntity<Map<String, String>> moi(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        Object email = session == null ? null : session.getAttribute(SESSION_EMAIL);
-        if (email == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.ok(Map.of("email", email.toString()));
+    public ResponseEntity<UtilisateurConnecte> moi(HttpServletRequest request) {
+        return utilisateurCourant.depuis(request)
+                .map(user -> ResponseEntity.ok(UtilisateurConnecte.depuis(user)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
     /**
@@ -77,7 +75,7 @@ public class AuthController {
             ancienne.invalidate();
         }
         HttpSession session = request.getSession(true);
-        session.setAttribute(SESSION_EMAIL, email.trim().toLowerCase(Locale.ROOT));
+        session.setAttribute(UtilisateurCourant.SESSION_EMAIL, email.trim().toLowerCase(Locale.ROOT));
     }
 
     private ResponseEntity<LoginResponse> response(HttpStatus status, String message) {
