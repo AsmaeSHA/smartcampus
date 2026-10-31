@@ -74,6 +74,13 @@ public class User {
         }
     }
 
+    /** Modifie les informations communes du compte (SC-64). */
+    public void modifierInformations(String email, String prenom, String nom) {
+        this.email = email;
+        this.prenom = prenom;
+        this.nom = nom;
+    }
+
     /** Désactive le compte (SC-28) : il ne peut plus se connecter, ses données sont conservées. */
     public void desactiver() {
         this.active = false;

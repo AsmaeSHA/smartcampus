@@ -500,3 +500,20 @@ button:focus-visible {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* ---------- Modifier un compte (SC-64) ---------- */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-actions .submit { flex: 1; margin-top: 0; }
+.form-actions .action { padding: 13px 16px; font-size: 0.95rem; }
+
+.liste-comptes .actions .action + .action,
+.liste-comptes .actions .action + .vous { margin-left: 6px; }
+
+.compte-form .muted { font-size: 0.875rem; margin-top: -8px; }
+
+.form-actions .action:disabled { opacity: 0.6; cursor: wait; }

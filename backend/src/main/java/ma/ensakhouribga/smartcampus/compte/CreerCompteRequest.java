@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import ma.ensakhouribga.smartcampus.user.Role;
 
 /**
- * Corps de POST /api/admin/comptes (SC-27).
+ * Corps de POST /api/admin/comptes (SC-27) et de PUT /api/admin/comptes/{id} (SC-64).
  * Les champs communs sont vérifiés ici ; les champs propres au rôle
  * (étudiant ou enseignant) sont vérifiés par {@link CompteService}.
  */

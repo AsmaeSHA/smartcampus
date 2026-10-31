@@ -36,8 +36,10 @@ class CompteServiceTest {
     private final EnseignantRepository enseignants = mock(EnseignantRepository.class);
     private final NiveauRepository niveaux = mock(NiveauRepository.class);
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final ChangementRole changementRole = mock(ChangementRole.class);
     private final CompteService service = new CompteService(users, etudiants, enseignants, niveaux,
-            encoder, new GenerateurMotDePasse(), new DomainesEmail("usms.ac.ma", "usms.ma", "ensakh.ma"));
+            encoder, new GenerateurMotDePasse(), new DomainesEmail("usms.ac.ma", "usms.ma", "ensakh.ma"),
+            changementRole);
 
     @BeforeEach
     void enregistrementRenvoieLeCompte() {
@@ -194,6 +196,77 @@ class CompteServiceTest {
         when(users.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(CompteIntrouvableException.class, () -> service.changerActivation(99L, false, 1L));
+    }
+
+    // ---------- SC-64 : modifier le rôle et les informations ----------
+
+    @Test
+    void modifieLesInformationsDUnEnseignantSansChangerDeRole() {
+        Enseignant prof = new Enseignant("k.bennani@usms.ma", "hash", "Karim", "Bennani", true,
+                "E1001", "0102", "PA", "Réseaux");
+        ReflectionTestUtils.setField(prof, "id", 20L);
+        when(users.findById(20L)).thenReturn(Optional.of(prof));
+
+        service.modifier(20L, new CreerCompteRequest(" Karim ", "Bennani-Alaoui", "k.bennani@usms.ma",
+                Role.ENSEIGNANT, null, null, null, "E1001", "PES", "Informatique", "0102"), 1L);
+
+        assertEquals("Bennani-Alaoui", prof.getNom());
+        assertEquals("Karim", prof.getPrenom());
+        assertEquals("PES", prof.getGrade());
+        assertEquals("Informatique", prof.getSpecialite());
+        verify(changementRole, never()).enEtudiant(any(), any(), any(), any(), any());
+        verify(changementRole, never()).enAdministrateur(any());
+    }
+
+    @Test
+    void changerUnEnseignantEnEtudiantPasseParChangementRole() {
+        Enseignant prof = new Enseignant("k.bennani@usms.ma", "hash", "Karim", "Bennani", true,
+                "E1001", "0102", "PA", "Réseaux");
+        ReflectionTestUtils.setField(prof, "id", 20L);
+        when(users.findById(20L)).thenReturn(Optional.of(prof));
+
+        service.modifier(20L, new CreerCompteRequest("Karim", "Bennani", "k.bennani@usms.ac.ma",
+                Role.ETUDIANT, "D555555555", 1L, "IID", null, null, null, "0102"), 1L);
+
+        verify(changementRole).enEtudiant(20L, "D555555555", "0102", "IID", null);
+    }
+
+    @Test
+    void unAdministrateurNePeutPasRetirerSonPropreRole() {
+        User admin = new User("admin@ensakh.ma", "hash", "Admin", "Test", Role.ADMINISTRATEUR, true);
+        ReflectionTestUtils.setField(admin, "id", 1L);
+        when(users.findById(1L)).thenReturn(Optional.of(admin));
+
+        CompteInvalideException erreur = assertThrows(CompteInvalideException.class,
+                () -> service.modifier(1L, new CreerCompteRequest("Admin", "Test", "admin@usms.ma",
+                        Role.ENSEIGNANT, null, null, null, "E9", "PES", "Info", "01"), 1L));
+
+        assertTrue(erreur.getMessage().contains("propre rôle"));
+        verify(changementRole, never()).enEnseignant(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void modifierRefuseUnEmailUtiliseParUnAutreCompte() {
+        User prof = compteAvecId(20L, true);
+        User autre = compteAvecId(21L, true);
+        when(users.findById(20L)).thenReturn(Optional.of(prof));
+        when(users.findByEmail("deja.pris@usms.ma")).thenReturn(Optional.of(autre));
+
+        assertThrows(CompteExistantException.class,
+                () -> service.modifier(20L, new CreerCompteRequest("P", "N", "deja.pris@usms.ma",
+                        Role.ENSEIGNANT, null, null, null, "E2", "PES", "Info", "01"), 1L));
+    }
+
+    @Test
+    void modifierRefuseUnDomaineQuiNeCorrespondPasAuNouveauRole() {
+        User prof = compteAvecId(20L, true);
+        when(users.findById(20L)).thenReturn(Optional.of(prof));
+
+        CompteInvalideException erreur = assertThrows(CompteInvalideException.class,
+                () -> service.modifier(20L, new CreerCompteRequest("P", "N", "compte20@usms.ma",
+                        Role.ADMINISTRATEUR, null, null, null, null, null, null, null), 1L));
+
+        assertTrue(erreur.getMessage().contains("@ensakh.ma"));
     }
 
     private static User compteAvecId(Long id, boolean actif) {
