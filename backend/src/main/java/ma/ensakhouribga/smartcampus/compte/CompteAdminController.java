@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Routes d'administration des comptes. Toutes les routes /api/admin/** sont
@@ -30,10 +32,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class CompteAdminController {
 
     private final CompteService compteService;
+    private final ImportComptesService importComptesService;
     private final UtilisateurCourant utilisateurCourant;
 
-    public CompteAdminController(CompteService compteService, UtilisateurCourant utilisateurCourant) {
+    public CompteAdminController(CompteService compteService, ImportComptesService importComptesService,
+                                 UtilisateurCourant utilisateurCourant) {
         this.compteService = compteService;
+        this.importComptesService = importComptesService;
         this.utilisateurCourant = utilisateurCourant;
     }
 
@@ -41,6 +46,15 @@ public class CompteAdminController {
     @PostMapping("/comptes")
     public ResponseEntity<CompteCree> creer(@Valid @RequestBody CreerCompteRequest demande) {
         return ResponseEntity.status(HttpStatus.CREATED).body(compteService.creer(demande));
+    }
+
+    /**
+     * SC-53 : importe des comptes depuis un fichier CSV (champ de formulaire « fichier »).
+     * Les lignes valides sont créées, les autres sont renvoyées avec la raison du refus.
+     */
+    @PostMapping("/comptes/import")
+    public ImportResultat importer(@RequestParam("fichier") MultipartFile fichier) throws java.io.IOException {
+        return importComptesService.importer(fichier.getBytes());
     }
 
     /** SC-64 : détail d'un compte, pour pré-remplir le formulaire de modification. */

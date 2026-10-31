@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import CreerCompteForm from './CreerCompteForm.jsx';
 import ListeComptes from './ListeComptes.jsx';
+import ImportComptes from './ImportComptes.jsx';
 
-// Page « Gestion des comptes » de l'administrateur (SC-27, SC-28, SC-64).
+// Page « Gestion des comptes » de l'administrateur (SC-27, SC-28, SC-64, SC-53).
 export default function AdminComptes({ emailConnecte }) {
   const [comptes, setComptes] = useState([]);
   const [niveaux, setNiveaux] = useState([]);
@@ -138,14 +139,17 @@ export default function AdminComptes({ emailConnecte }) {
       )}
 
       <div className="admin-grille">
-        <CreerCompteForm
-          key={enModification ? enModification.id : 'nouveau'}
-          niveaux={niveaux}
-          compte={enModification}
-          onCree={compteCree}
-          onModifie={compteModifie}
-          onAnnuler={() => setEnModification(null)}
-        />
+        <div className="colonne-gauche">
+          <CreerCompteForm
+            key={enModification ? enModification.id : 'nouveau'}
+            niveaux={niveaux}
+            compte={enModification}
+            onCree={compteCree}
+            onModifie={compteModifie}
+            onAnnuler={() => setEnModification(null)}
+          />
+          <ImportComptes onImporte={charger} />
+        </div>
         <ListeComptes
           comptes={comptes}
           chargement={chargement}
