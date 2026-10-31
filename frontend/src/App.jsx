@@ -28,7 +28,7 @@ export default function App() {
           </div>
         </header>
         <main className="admin-main">
-          <AdminComptes />
+          <AdminComptes emailConnecte={utilisateur.email} />
         </main>
       </div>
     );

@@ -1,6 +1,7 @@
 package ma.ensakhouribga.smartcampus.compte;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class CompteServiceTest {
 
@@ -145,6 +147,59 @@ class CompteServiceTest {
                 Role.ENSEIGNANT, null, null, null, "E1001", null, "Informatique", "0102");
 
         assertThrows(CompteInvalideException.class, () -> service.creer(demande));
+    }
+
+    // ---------- SC-28 : désactiver et réactiver un compte ----------
+
+    @Test
+    void desactiveUnCompteSansLeSupprimer() {
+        User compte = compteAvecId(10L, true);
+        when(users.findById(10L)).thenReturn(Optional.of(compte));
+        when(users.save(compte)).thenReturn(compte);
+
+        CompteResume resultat = service.changerActivation(10L, false, 1L);
+
+        assertFalse(compte.isActive());
+        assertFalse(resultat.actif());
+        verify(users, never()).delete(any(User.class));
+        verify(users, never()).deleteById(any());
+    }
+
+    @Test
+    void reactiveUnCompteDesactive() {
+        User compte = compteAvecId(10L, false);
+        when(users.findById(10L)).thenReturn(Optional.of(compte));
+        when(users.save(compte)).thenReturn(compte);
+
+        CompteResume resultat = service.changerActivation(10L, true, 1L);
+
+        assertTrue(compte.isActive());
+        assertTrue(resultat.actif());
+    }
+
+    @Test
+    void unAdministrateurNePeutPasDesactiverSonPropreCompte() {
+        User admin = compteAvecId(1L, true);
+        when(users.findById(1L)).thenReturn(Optional.of(admin));
+
+        CompteInvalideException erreur = assertThrows(CompteInvalideException.class,
+                () -> service.changerActivation(1L, false, 1L));
+
+        assertTrue(erreur.getMessage().contains("propre compte"));
+        assertTrue(admin.isActive());
+    }
+
+    @Test
+    void unCompteInconnuLeveUneErreur() {
+        when(users.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(CompteIntrouvableException.class, () -> service.changerActivation(99L, false, 1L));
+    }
+
+    private static User compteAvecId(Long id, boolean actif) {
+        User compte = new User("compte" + id + "@usms.ma", "hash", "Prenom", "Nom", Role.ENSEIGNANT, actif);
+        ReflectionTestUtils.setField(compte, "id", id);
+        return compte;
     }
 
     private static CreerCompteRequest etudiant(String email, String codeMassar) {

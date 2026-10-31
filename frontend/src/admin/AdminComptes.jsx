@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import CreerCompteForm from './CreerCompteForm.jsx';
 import ListeComptes from './ListeComptes.jsx';
 
-// Page « Gestion des comptes » de l'administrateur (SC-27).
-export default function AdminComptes() {
+// Page « Gestion des comptes » de l'administrateur (SC-27, SC-28).
+export default function AdminComptes({ emailConnecte }) {
   const [comptes, setComptes] = useState([]);
   const [niveaux, setNiveaux] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -40,6 +40,30 @@ export default function AdminComptes() {
     setDernierCree(resultat);
     setCopie(false);
     charger();
+  }
+
+  // SC-28 : désactive ou réactive un compte, après confirmation.
+  async function changerActivation(compte) {
+    const action = compte.actif ? 'desactiver' : 'reactiver';
+    const question = compte.actif
+      ? `Désactiver le compte de ${compte.prenom} ${compte.nom} ? Il ne pourra plus se connecter, mais ses données seront conservées.`
+      : `Réactiver le compte de ${compte.prenom} ${compte.nom} ?`;
+    if (!window.confirm(question)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/comptes/${compte.id}/${action}`, { method: 'PATCH' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setErreur(data.message || 'Action impossible. Réessayez plus tard.');
+        return;
+      }
+      setErreur('');
+      setComptes((liste) => liste.map((c) => (c.id === data.id ? data : c)));
+    } catch (err) {
+      setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
+    }
   }
 
   async function copier() {
@@ -81,7 +105,12 @@ export default function AdminComptes() {
 
       <div className="admin-grille">
         <CreerCompteForm niveaux={niveaux} onCree={compteCree} />
-        <ListeComptes comptes={comptes} chargement={chargement} />
+        <ListeComptes
+          comptes={comptes}
+          chargement={chargement}
+          emailConnecte={emailConnecte}
+          onChangerActivation={changerActivation}
+        />
       </div>
     </div>
   );

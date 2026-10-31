@@ -74,6 +74,16 @@ public class User {
         }
     }
 
+    /** Désactive le compte (SC-28) : il ne peut plus se connecter, ses données sont conservées. */
+    public void desactiver() {
+        this.active = false;
+    }
+
+    /** Réactive un compte désactivé (SC-28). */
+    public void reactiver() {
+        this.active = true;
+    }
+
     public boolean estAdministrateur() {
         return role == Role.ADMINISTRATEUR;
     }

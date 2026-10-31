@@ -27,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
  *   code enseignant, grade… pour un enseignant) ;
  * - le mot de passe est généré par le serveur, stocké haché (BCrypt) et doit être changé
  *   à la première connexion.
+ * SC-28 : désactivation et réactivation, sans suppression des données ;
+ * un administrateur ne peut pas désactiver son propre compte.
  */
 @Service
 public class CompteService {
@@ -86,6 +88,27 @@ public class CompteService {
             throw new CompteExistantException("Un compte existe déjà avec cet e-mail ou ce code");
         }
         return new CompteCree(CompteResume.depuis(enregistre), motDePasse);
+    }
+
+    /**
+     * Active ou désactive un compte (SC-28). Rien n'est supprimé : seul l'état change.
+     * Un compte désactivé ne peut plus se connecter (R2) et perd l'accès dès sa requête suivante.
+     *
+     * @param idAdministrateur id de l'administrateur qui fait la demande
+     */
+    @Transactional
+    public CompteResume changerActivation(Long id, boolean actif, Long idAdministrateur) {
+        User compte = users.findById(id)
+                .orElseThrow(() -> new CompteIntrouvableException("Ce compte n'existe pas"));
+        if (!actif && compte.getId().equals(idAdministrateur)) {
+            throw new CompteInvalideException("Vous ne pouvez pas désactiver votre propre compte");
+        }
+        if (actif) {
+            compte.reactiver();
+        } else {
+            compte.desactiver();
+        }
+        return CompteResume.depuis(users.save(compte));
     }
 
     @Transactional(readOnly = true)
