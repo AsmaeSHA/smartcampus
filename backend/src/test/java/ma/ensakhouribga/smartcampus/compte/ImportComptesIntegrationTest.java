@@ -123,6 +123,16 @@ class ImportComptesIntegrationTest {
     }
 
     @Test
+    void unFichierQuiNEstPasUnCsvEstRefuse() throws Exception {
+        MockMultipartFile excel = new MockMultipartFile("fichier", "comptes.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", new byte[] {1, 2, 3});
+
+        mvc.perform(multipart("/api/admin/comptes/import").file(excel).session(connecter(ADMIN, PASSWORD)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString(".csv")));
+    }
+
+    @Test
     void unFichierSansCompteEstRefuse() throws Exception {
         mvc.perform(multipart("/api/admin/comptes/import").file(fichier(ENTETE))
                         .session(connecter(ADMIN, PASSWORD)))

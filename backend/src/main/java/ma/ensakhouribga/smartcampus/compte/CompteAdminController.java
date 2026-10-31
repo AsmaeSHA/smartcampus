@@ -54,6 +54,10 @@ public class CompteAdminController {
      */
     @PostMapping("/comptes/import")
     public ImportResultat importer(@RequestParam("fichier") MultipartFile fichier) throws java.io.IOException {
+        String nom = fichier.getOriginalFilename();
+        if (nom == null || !nom.toLowerCase(java.util.Locale.ROOT).endsWith(".csv")) {
+            throw new CompteInvalideException("Le fichier doit être au format .csv");
+        }
         return importComptesService.importer(fichier.getBytes());
     }
 

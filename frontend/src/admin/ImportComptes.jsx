@@ -41,6 +41,10 @@ export default function ImportComptes({ onImporte }) {
       setErreur('Choisissez un fichier CSV.');
       return;
     }
+    if (!fichier.name.toLowerCase().endsWith('.csv')) {
+      setErreur('Le fichier doit être au format .csv. Dans Excel : Fichier › Enregistrer sous › CSV.');
+      return;
+    }
 
     setEnvoi(true);
     try {
