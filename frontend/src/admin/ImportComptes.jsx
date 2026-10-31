@@ -77,8 +77,7 @@ export default function ImportComptes({ onImporte }) {
   }
 
   return (
-    <section className="card import-comptes" aria-labelledby="titre-import">
-      <h2 id="titre-import">Importer depuis un CSV</h2>
+    <section className="import-comptes">
       <p className="muted">
         Une ligne par compte. Les lignes valides sont créées, les autres sont signalées.{' '}
         <button type="button" className="lien" onClick={() => telecharger('modele-comptes.csv', [ENTETE, ...EXEMPLES])}>
