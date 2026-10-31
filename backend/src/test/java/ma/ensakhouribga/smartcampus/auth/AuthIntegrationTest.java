@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @AutoConfigureMockMvc
 class AuthIntegrationTest {
 
-    private static final String EMAIL = "integration@usms.ma";
+    private static final String EMAIL = "integration@ensakh.ma";
     private static final String PASSWORD = "motdepasse-test";
     private static final String LOGIN_BODY =
             "{\"email\":\"" + EMAIL + "\",\"password\":\"" + PASSWORD + "\"}";

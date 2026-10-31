@@ -1,6 +1,7 @@
 package ma.ensakhouribga.smartcampus.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -12,6 +13,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Optional;
+import ma.ensakhouribga.smartcampus.user.DomainesEmail;
 import ma.ensakhouribga.smartcampus.user.Role;
 import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
@@ -20,7 +22,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class LoginServiceTest {
 
-    private static final String DOMAIN = "usms.ma";
+    private static final DomainesEmail DOMAIN = new DomainesEmail("usms.ac.ma", "usms.ma", "ensakh.ma");
     private static final String EMAIL = "asmae@usms.ma";
     private static final String PASSWORD = "secret123";
 
@@ -65,6 +67,15 @@ class LoginServiceTest {
                 .thenReturn(Optional.of(new User(EMAIL, encoder.encode(PASSWORD), "Asmae", "Test", Role.ETUDIANT, false)));
 
         assertEquals(LoginResult.ACCOUNT_INACTIVE, service.login(EMAIL, PASSWORD));
+    }
+
+    @Test
+    void lesTroisDomainesDeLEcoleSontAcceptes() {
+        when(users.findByEmail(any())).thenReturn(Optional.empty());
+
+        assertEquals(LoginResult.INVALID_CREDENTIALS, service.login("etudiant@usms.ac.ma", PASSWORD));
+        assertEquals(LoginResult.INVALID_CREDENTIALS, service.login("prof@usms.ma", PASSWORD));
+        assertEquals(LoginResult.INVALID_CREDENTIALS, service.login("admin@ensakh.ma", PASSWORD));
     }
 
     @Test

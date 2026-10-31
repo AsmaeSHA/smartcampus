@@ -40,8 +40,8 @@ import org.springframework.web.bind.annotation.RestController;
 class AdminAccessIntegrationTest {
 
     private static final String PASSWORD = "motdepasse-test";
-    private static final String ADMIN = "admin.test@usms.ma";
-    private static final String ETUDIANT = "etudiant.test@usms.ma";
+    private static final String ADMIN = "admin.test@ensakh.ma";
+    private static final String ETUDIANT = "etudiant.test@usms.ac.ma";
     private static final String ENSEIGNANT = "enseignant.test@usms.ma";
 
     @Autowired

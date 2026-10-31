@@ -7,18 +7,18 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import ma.ensakhouribga.smartcampus.user.DomainesEmail;
 import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
  * Règles de connexion de SmartCampus :
- * - seul le domaine e-mail de l'école est accepté ;
+ * - seuls les domaines e-mail de l'école sont acceptés (étudiant, enseignant, administrateur) ;
  * - le mot de passe est vérifié par son hash ;
  * - un compte désactivé ne peut pas se connecter ;
  * - après 3 échecs consécutifs, le compte est verrouillé 5 minutes.
@@ -33,7 +33,7 @@ public class LoginService {
 
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
-    private final String allowedDomain;
+    private final DomainesEmail domaines;
     private final Clock clock;
     private final Map<String, Integer> consecutiveFailures = new ConcurrentHashMap<>();
     private final Map<String, Instant> lockedUntil = new ConcurrentHashMap<>();
@@ -41,24 +41,24 @@ public class LoginService {
     @Autowired
     public LoginService(UserRepository users,
                         PasswordEncoder passwordEncoder,
-                        @Value("${smartcampus.allowed-domain}") String allowedDomain) {
-        this(users, passwordEncoder, allowedDomain, Clock.systemDefaultZone());
+                        DomainesEmail domaines) {
+        this(users, passwordEncoder, domaines, Clock.systemDefaultZone());
     }
 
     LoginService(UserRepository users,
                  PasswordEncoder passwordEncoder,
-                 String allowedDomain,
+                 DomainesEmail domaines,
                  Clock clock) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
-        this.allowedDomain = allowedDomain.toLowerCase(Locale.ROOT);
+        this.domaines = domaines;
         this.clock = clock;
     }
 
     public LoginResult login(String email, String rawPassword) {
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
 
-        if (!normalizedEmail.endsWith("@" + allowedDomain)) {
+        if (!domaines.estInstitutionnel(normalizedEmail)) {
             return LoginResult.DOMAIN_NOT_ALLOWED;
         }
 

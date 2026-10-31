@@ -19,10 +19,19 @@ import org.springframework.stereotype.Component;
 @Profile("dev")
 public class DevDataLoader implements CommandLineRunner {
 
-    static final String TEST_EMAIL = "test@usms.ma";
+    static final String TEST_EMAIL = "test@usms.ac.ma";
     static final String TEST_PASSWORD = "test1234";
-    static final String ADMIN_EMAIL = "admin@usms.ma";
+    static final String ADMIN_EMAIL = "admin@ensakh.ma";
     static final String ADMIN_PASSWORD = "admin1234";
+    /** Niveaux de l'ENSA Khouribga : cycle préparatoire puis filières d'ingénieur (années 1 à 3). */
+    static final String[] NIVEAUX = {
+        "CP1", "CP2",
+        "GI1", "GI2", "GI3",
+        "IID1", "IID2", "IID3",
+        "MGSI1", "MGSI2", "MGSI3",
+        "GE1", "GE2", "GE3",
+        "GP1", "GP2", "GP3"
+    };
 
     private final UserRepository users;
     private final NiveauRepository niveaux;
@@ -36,7 +45,11 @@ public class DevDataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        Niveau gi3 = niveaux.findByNom("GI3").orElseGet(() -> niveaux.save(new Niveau("GI3")));
+        // Niveaux proposés dans le formulaire de création d'un étudiant.
+        for (String nom : NIVEAUX) {
+            niveaux.findByNom(nom).orElseGet(() -> niveaux.save(new Niveau(nom)));
+        }
+        Niveau gi3 = niveaux.findByNom("GI3").orElseThrow();
 
         if (users.findByEmail(TEST_EMAIL).isEmpty()) {
             users.save(new Etudiant(TEST_EMAIL, passwordEncoder.encode(TEST_PASSWORD),
