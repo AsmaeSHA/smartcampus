@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import CreerCompteForm from './CreerCompteForm.jsx';
 import ListeComptes from './ListeComptes.jsx';
 
-// Page « Gestion des comptes » de l'administrateur (SC-27, SC-28).
+// Page « Gestion des comptes » de l'administrateur (SC-27, SC-28, SC-64).
 export default function AdminComptes({ emailConnecte }) {
   const [comptes, setComptes] = useState([]);
   const [niveaux, setNiveaux] = useState([]);
@@ -10,6 +10,8 @@ export default function AdminComptes({ emailConnecte }) {
   const [erreur, setErreur] = useState('');
   const [dernierCree, setDernierCree] = useState(null);
   const [copie, setCopie] = useState(false);
+  const [enModification, setEnModification] = useState(null);
+  const [message, setMessage] = useState('');
 
   async function charger() {
     setChargement(true);
@@ -37,9 +39,35 @@ export default function AdminComptes({ emailConnecte }) {
   }, []);
 
   function compteCree(resultat) {
+    setMessage('');
     setDernierCree(resultat);
     setCopie(false);
     charger();
+  }
+
+  // SC-64 : charge le détail du compte puis ouvre le formulaire pré-rempli.
+  async function ouvrirModification(compte) {
+    try {
+      const response = await fetch(`/api/admin/comptes/${compte.id}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setErreur(data.message || 'Impossible de charger ce compte.');
+        return;
+      }
+      setErreur('');
+      setMessage('');
+      setDernierCree(null);
+      setEnModification(data);
+      document.getElementById('form-compte')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
+    }
+  }
+
+  function compteModifie(resultat) {
+    setEnModification(null);
+    setMessage(`Le compte de ${resultat.prenom} ${resultat.nom} a été modifié.`);
+    setComptes((liste) => liste.map((c) => (c.id === resultat.id ? resultat : c)));
   }
 
   // SC-28 : désactive ou réactive un compte, après confirmation.
@@ -88,6 +116,12 @@ export default function AdminComptes({ emailConnecte }) {
         </p>
       )}
 
+      {message && (
+        <p className="succes" role="status">
+          {message}
+        </p>
+      )}
+
       {dernierCree && (
         <div className="succes" role="status">
           <p>
@@ -104,12 +138,20 @@ export default function AdminComptes({ emailConnecte }) {
       )}
 
       <div className="admin-grille">
-        <CreerCompteForm niveaux={niveaux} onCree={compteCree} />
+        <CreerCompteForm
+          key={enModification ? enModification.id : 'nouveau'}
+          niveaux={niveaux}
+          compte={enModification}
+          onCree={compteCree}
+          onModifie={compteModifie}
+          onAnnuler={() => setEnModification(null)}
+        />
         <ListeComptes
           comptes={comptes}
           chargement={chargement}
           emailConnecte={emailConnecte}
           onChangerActivation={changerActivation}
+          onModifier={ouvrirModification}
         />
       </div>
     </div>

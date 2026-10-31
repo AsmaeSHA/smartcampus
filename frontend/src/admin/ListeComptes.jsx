@@ -1,5 +1,6 @@
 // Liste des comptes (GET /api/admin/comptes). Aucun mot de passe n'est renvoyé par le serveur.
 // SC-28 : chaque ligne propose de désactiver ou de réactiver le compte.
+// SC-64 : chaque ligne propose de modifier le compte.
 
 const LIBELLES_ROLE = {
   ETUDIANT: 'Étudiant',
@@ -7,7 +8,7 @@ const LIBELLES_ROLE = {
   ADMINISTRATEUR: 'Administrateur',
 };
 
-export default function ListeComptes({ comptes, chargement, emailConnecte, onChangerActivation }) {
+export default function ListeComptes({ comptes, chargement, emailConnecte, onChangerActivation, onModifier }) {
   return (
     <section className="card liste-comptes" aria-labelledby="titre-liste">
       <h2 id="titre-liste">
@@ -42,8 +43,16 @@ export default function ListeComptes({ comptes, chargement, emailConnecte, onCha
                     {c.changerMotDePasse && <span className="badge attente">Mot de passe à changer</span>}
                   </td>
                   <td className="actions">
+                    <button
+                      type="button"
+                      className="action"
+                      onClick={() => onModifier(c)}
+                      aria-label={`Modifier le compte de ${c.prenom} ${c.nom}`}
+                    >
+                      Modifier
+                    </button>
                     {c.email === emailConnecte ? (
-                      <span className="muted">Vous</span>
+                      <span className="muted vous">Vous</span>
                     ) : (
                       <button
                         type="button"

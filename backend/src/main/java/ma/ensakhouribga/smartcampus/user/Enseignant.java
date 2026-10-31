@@ -34,6 +34,14 @@ public class Enseignant extends User {
         this.specialite = specialite;
     }
 
+    /** Modifie les informations propres à l'enseignant (SC-64). */
+    public void modifier(String codeEnseignant, String numero, String grade, String specialite) {
+        this.codeEnseignant = codeEnseignant;
+        this.numero = numero;
+        this.grade = grade;
+        this.specialite = specialite;
+    }
+
     public String getCodeEnseignant() {
         return codeEnseignant;
     }

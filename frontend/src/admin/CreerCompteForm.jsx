@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
-// Formulaire de création d'un compte par l'administrateur (SC-27).
-// Envoie POST /api/admin/comptes ; le serveur renvoie le compte et son mot de passe temporaire.
+// Formulaire de compte de l'administrateur.
+// - Création (SC-27) : POST /api/admin/comptes ; le serveur renvoie le compte et son mot de passe temporaire.
+// - Modification (SC-64) : PUT /api/admin/comptes/{id}, quand la prop « compte » est fournie.
 
 const ROLES = [
   { valeur: 'ETUDIANT', libelle: 'Étudiant' },
@@ -29,9 +30,21 @@ const VIDE = {
   specialite: '',
 };
 
-export default function CreerCompteForm({ niveaux, onCree }) {
-  const [role, setRole] = useState('ETUDIANT');
-  const [champs, setChamps] = useState(VIDE);
+// Pré-remplit le formulaire à partir du détail d'un compte (les champs absents deviennent '').
+function depuisCompte(compte) {
+  const champs = { ...VIDE };
+  Object.keys(VIDE).forEach((cle) => {
+    if (compte[cle] !== null && compte[cle] !== undefined) {
+      champs[cle] = String(compte[cle]);
+    }
+  });
+  return champs;
+}
+
+export default function CreerCompteForm({ niveaux, onCree, compte = null, onModifie, onAnnuler }) {
+  const modification = compte !== null;
+  const [role, setRole] = useState(modification ? compte.role : 'ETUDIANT');
+  const [champs, setChamps] = useState(modification ? depuisCompte(compte) : VIDE);
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
 
@@ -76,19 +89,23 @@ export default function CreerCompteForm({ niveaux, onCree }) {
 
     setEnvoi(true);
     try {
-      const response = await fetch('/api/admin/comptes', {
-        method: 'POST',
+      const response = await fetch(modification ? `/api/admin/comptes/${compte.id}` : '/api/admin/comptes', {
+        method: modification ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(construireDemande()),
       });
       const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        setChamps(VIDE);
-        onCree(data);
+        if (modification) {
+          onModifie(data);
+        } else {
+          setChamps(VIDE);
+          onCree(data);
+        }
         return;
       }
-      setErreur(data.message || 'Création impossible. Réessayez plus tard.');
+      setErreur(data.message || 'Enregistrement impossible. Réessayez plus tard.');
     } catch (err) {
       setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
     } finally {
@@ -97,8 +114,14 @@ export default function CreerCompteForm({ niveaux, onCree }) {
   }
 
   return (
-    <form className="card compte-form" onSubmit={envoyer} noValidate>
-      <h2>Nouveau compte</h2>
+    <form id="form-compte" className="card compte-form" onSubmit={envoyer} noValidate>
+      <h2>{modification ? 'Modifier le compte' : 'Nouveau compte'}</h2>
+      {modification && (
+        <p className="muted">
+          Le mot de passe et l’état du compte ne changent pas. Si l’e-mail change, l’utilisateur devra se
+          reconnecter avec le nouvel e-mail.
+        </p>
+      )}
 
       <fieldset className="segmented">
         <legend>Rôle</legend>
@@ -174,9 +197,17 @@ export default function CreerCompteForm({ niveaux, onCree }) {
         </p>
       )}
 
-      <button type="submit" className="submit" disabled={envoi}>
-        {envoi ? 'Création en cours…' : 'Créer le compte'}
-      </button>
+      <div className="form-actions">
+        <button type="submit" className="submit" disabled={envoi}>
+          {envoi && (modification ? 'Enregistrement…' : 'Création en cours…')}
+          {!envoi && (modification ? 'Enregistrer les modifications' : 'Créer le compte')}
+        </button>
+        {modification && (
+          <button type="button" className="action" onClick={onAnnuler} disabled={envoi}>
+            Annuler
+          </button>
+        )}
+      </div>
     </form>
   );
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +41,19 @@ public class CompteAdminController {
     @PostMapping("/comptes")
     public ResponseEntity<CompteCree> creer(@Valid @RequestBody CreerCompteRequest demande) {
         return ResponseEntity.status(HttpStatus.CREATED).body(compteService.creer(demande));
+    }
+
+    /** SC-64 : détail d'un compte, pour pré-remplir le formulaire de modification. */
+    @GetMapping("/comptes/{id}")
+    public CompteDetail detail(@PathVariable Long id) {
+        return compteService.detail(id);
+    }
+
+    /** SC-64 : modifie les informations et, si besoin, le rôle d'un compte. */
+    @PutMapping("/comptes/{id}")
+    public CompteResume modifier(@PathVariable Long id, @Valid @RequestBody CreerCompteRequest demande,
+                                 HttpServletRequest request) {
+        return compteService.modifier(id, demande, idAdministrateur(request));
     }
 
     /** SC-28 : désactive un compte, sans supprimer ses données. */

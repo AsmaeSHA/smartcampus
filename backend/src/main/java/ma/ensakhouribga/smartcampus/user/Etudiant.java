@@ -37,6 +37,14 @@ public class Etudiant extends User {
         this.niveau = niveau;
     }
 
+    /** Modifie les informations propres à l'étudiant (SC-64). */
+    public void modifier(String codeMassar, String numero, String filiere, Niveau niveau) {
+        this.codeMassar = codeMassar;
+        this.numero = numero;
+        this.filiere = filiere;
+        this.niveau = niveau;
+    }
+
     public String getCodeMassar() {
         return codeMassar;
     }
