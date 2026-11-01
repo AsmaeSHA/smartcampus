@@ -6,6 +6,7 @@ import java.util.Optional;
 import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Retrouve l'utilisateur connecté à partir de la session.
@@ -32,5 +33,11 @@ public class UtilisateurCourant {
             return Optional.empty();
         }
         return users.findByEmail(email.toString()).filter(User::isActive);
+    }
+
+    /** Charge et transforme le profil pendant la transaction, y compris le niveau étudiant. */
+    @Transactional(readOnly = true)
+    public Optional<UtilisateurConnecte> profilDepuis(HttpServletRequest request) {
+        return depuis(request).map(UtilisateurConnecte::depuis);
     }
 }

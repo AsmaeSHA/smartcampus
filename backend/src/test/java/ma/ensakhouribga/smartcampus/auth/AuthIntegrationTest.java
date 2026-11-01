@@ -3,6 +3,7 @@ package ma.ensakhouribga.smartcampus.auth;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -93,6 +94,40 @@ class AuthIntegrationTest {
     void meSansSessionRenvoie401() throws Exception {
         mvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void motDePasseProvisoireForceLeChangementSansAncienMotDePasse() throws Exception {
+        String provisoire = "provisoire-test";
+        String nouveau = "nouveau-mot-de-passe-long";
+        User compte = new User("provisoire@ensakh.ma", passwordEncoder.encode(provisoire),
+                "Compte", "Provisoire", Role.ADMINISTRATEUR, true);
+        compte.setChangerMotDePasse(true);
+        users.save(compte);
+
+        MvcResult connexion = mvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content("{\"email\":\"provisoire@ensakh.ma\",\"password\":\"" + provisoire + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.redirect").value("/mot-de-passe"))
+                .andReturn();
+        MockHttpSession session = (MockHttpSession) connexion.getRequest().getSession(false);
+
+        mvc.perform(put("/api/auth/password").session(session)
+                        .contentType("application/json")
+                        .content("{\"ancienMotDePasse\":\"" + provisoire + "\",\"nouveauMotDePasse\":\"" + nouveau + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.redirect").value("/accueil"));
+
+        mvc.perform(get("/api/auth/me").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.changerMotDePasse").value(false));
+
+        mvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content("{\"email\":\"provisoire@ensakh.ma\",\"password\":\"" + nouveau + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.redirect").value("/accueil"));
     }
 
     @Test
