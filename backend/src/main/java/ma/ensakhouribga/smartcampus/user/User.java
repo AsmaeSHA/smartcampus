@@ -91,6 +91,18 @@ public class User {
         this.active = true;
     }
 
+    /** Remplace le hash du mot de passe sans exposer de secret en clair à l'entité. */
+    public void changerMotDePasse(String passwordHash) {
+        this.passwordHash = passwordHash;
+        this.changerMotDePasse = false;
+    }
+
+    /** Définit un hash provisoire et impose son remplacement à la prochaine connexion. */
+    public void reinitialiserMotDePasse(String passwordHash) {
+        this.passwordHash = passwordHash;
+        this.changerMotDePasse = true;
+    }
+
     public boolean estAdministrateur() {
         return role == Role.ADMINISTRATEUR;
     }

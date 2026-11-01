@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GenerateurMotDePasse {
 
-    static final int LONGUEUR = 12;
+    static final int LONGUEUR = 16;
     private static final String ALPHABET =
             "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 

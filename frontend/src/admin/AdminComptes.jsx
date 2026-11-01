@@ -13,6 +13,7 @@ export default function AdminComptes({ emailConnecte }) {
   const [copie, setCopie] = useState(false);
   const [enModification, setEnModification] = useState(null);
   const [message, setMessage] = useState('');
+  const [dernierReinitialise, setDernierReinitialise] = useState(null);
 
   async function charger() {
     setChargement(true);
@@ -95,6 +96,17 @@ export default function AdminComptes({ emailConnecte }) {
     }
   }
 
+  async function reinitialiserMotDePasse(compte) {
+    if (!window.confirm(`Générer un mot de passe provisoire pour ${compte.prenom} ${compte.nom} ? Son mot de passe actuel cessera de fonctionner.`)) return;
+    try {
+      const response = await fetch(`/api/admin/comptes/${compte.id}/reinitialiser-mot-de-passe`, { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) { setErreur(data.message || 'Réinitialisation impossible.'); return; }
+      setErreur(''); setDernierReinitialise(data); setCopie(false);
+      setComptes(liste => liste.map(c => c.id === data.compte.id ? data.compte : c));
+    } catch { setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.'); }
+  }
+
   async function copier() {
     try {
       await navigator.clipboard.writeText(dernierCree.motDePasseTemporaire);
@@ -121,6 +133,13 @@ export default function AdminComptes({ emailConnecte }) {
         <p className="succes" role="status">
           {message}
         </p>
+      )}
+
+      {dernierReinitialise && (
+        <div className="succes" role="status">
+          <p>Mot de passe provisoire généré pour <strong>{dernierReinitialise.compte.email}</strong>. Il ne sera plus affiché après fermeture de cet écran.</p>
+          <div className="mot-de-passe"><code>{dernierReinitialise.motDePasseTemporaire}</code><button type="button" className="logout" onClick={async () => { try { await navigator.clipboard.writeText(dernierReinitialise.motDePasseTemporaire); setCopie(true); } catch { setCopie(false); } }}>{copie ? 'Copié' : 'Copier'}</button></div>
+        </div>
       )}
 
       {dernierCree && (
@@ -156,6 +175,7 @@ export default function AdminComptes({ emailConnecte }) {
           emailConnecte={emailConnecte}
           onChangerActivation={changerActivation}
           onModifier={ouvrirModification}
+          onReinitialiserMotDePasse={reinitialiserMotDePasse}
         />
       </div>
     </div>

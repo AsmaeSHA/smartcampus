@@ -86,6 +86,12 @@ public class CompteAdminController {
         return compteService.changerActivation(id, true, idAdministrateur(request));
     }
 
+    /** SC-72/73/74 : réinitialise le mot de passe et exige son remplacement à la prochaine connexion. */
+    @PostMapping("/comptes/{id}/reinitialiser-mot-de-passe")
+    public CompteCree reinitialiserMotDePasse(@PathVariable Long id) {
+        return compteService.reinitialiserMotDePasse(id);
+    }
+
     @GetMapping("/comptes")
     public List<CompteResume> lister() {
         return compteService.lister();

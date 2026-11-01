@@ -93,6 +93,15 @@ public class CompteService {
         return new CompteCree(CompteResume.depuis(enregistrer(compte)), motDePasse);
     }
 
+    /** SC-72 : produit un mot de passe provisoire sécurisé, sans jamais stocker sa valeur en clair. */
+    @Transactional
+    public CompteCree reinitialiserMotDePasse(Long id) {
+        User compte = users.findById(id).orElseThrow(() -> new CompteIntrouvableException("Compte introuvable"));
+        String temporaire = generateur.generer();
+        compte.reinitialiserMotDePasse(passwordEncoder.encode(temporaire));
+        return new CompteCree(CompteResume.depuis(users.save(compte)), temporaire);
+    }
+
     // ---------- SC-28 : désactiver et réactiver ----------
 
     /**

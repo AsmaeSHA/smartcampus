@@ -8,7 +8,7 @@ const LIBELLES_ROLE = {
   ADMINISTRATEUR: 'Administrateur',
 };
 
-export default function ListeComptes({ comptes, chargement, emailConnecte, onChangerActivation, onModifier }) {
+export default function ListeComptes({ comptes, chargement, emailConnecte, onChangerActivation, onModifier, onReinitialiserMotDePasse }) {
   return (
     <section className="card liste-comptes" aria-labelledby="titre-liste">
       <h2 id="titre-liste">
@@ -50,6 +50,9 @@ export default function ListeComptes({ comptes, chargement, emailConnecte, onCha
                       aria-label={`Modifier le compte de ${c.prenom} ${c.nom}`}
                     >
                       Modifier
+                    </button>
+                    <button type="button" className="action" onClick={() => onReinitialiserMotDePasse(c)} aria-label={`Réinitialiser le mot de passe de ${c.prenom} ${c.nom}`}>
+                      Réinitialiser le mot de passe
                     </button>
                     {c.email === emailConnecte ? (
                       <span className="muted vous">Vous</span>

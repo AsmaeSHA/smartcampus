@@ -79,7 +79,28 @@ public class LoginService {
         }
 
         consecutiveFailures.remove(normalizedEmail);
+        if (user.get().isChangerMotDePasse()) {
+            return LoginResult.PASSWORD_CHANGE_REQUIRED;
+        }
         return LoginResult.SUCCESS;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void changerMotDePasse(User user, String ancien, String nouveau) {
+        if (ancien == null || !passwordEncoder.matches(ancien, user.getPasswordHash())) {
+            throw new SecurityException("L'ancien mot de passe est incorrect");
+        }
+        if (nouveau == null) {
+            throw new IllegalArgumentException("Le nouveau mot de passe est obligatoire");
+        }
+        if (nouveau.length() < 12 || nouveau.length() > 128) {
+            throw new IllegalArgumentException("Le nouveau mot de passe doit contenir entre 12 et 128 caractères");
+        }
+        if (passwordEncoder.matches(nouveau, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Le nouveau mot de passe doit être différent de l'ancien");
+        }
+        user.changerMotDePasse(passwordEncoder.encode(nouveau));
+        users.save(user);
     }
 
     private boolean isLocked(String email, Instant now) {
