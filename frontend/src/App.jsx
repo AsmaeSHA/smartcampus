@@ -58,7 +58,6 @@ export default function App() {
         <header className="admin-top">
           <p className="brand">SmartCampus</p>
           <div className="admin-user">
-            <span>{utilisateur.prenom} {utilisateur.nom} · Administrateur</span>
             <LogoutButton onLogout={() => setUtilisateur(null)} />
           </div>
         </header>

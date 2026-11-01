@@ -114,8 +114,7 @@ export default function CreerCompteForm({ niveaux, onCree, compte = null, onModi
   }
 
   return (
-    <form id="form-compte" className="card compte-form" onSubmit={envoyer} noValidate>
-      <h2>{modification ? 'Modifier le compte' : 'Nouveau compte'}</h2>
+    <form id="form-compte" className="compte-form" onSubmit={envoyer} noValidate>
       {modification && (
         <p className="muted">
           Le mot de passe et l’état du compte ne changent pas. Si l’e-mail change, l’utilisateur devra se
