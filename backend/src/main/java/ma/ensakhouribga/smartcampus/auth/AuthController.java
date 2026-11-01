@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,6 +33,10 @@ public class AuthController {
             case SUCCESS -> {
                 ouvrirSession(httpRequest, request.email());
                 yield ResponseEntity.ok(new LoginResponse("Connexion réussie", "/accueil"));
+            }
+            case PASSWORD_CHANGE_REQUIRED -> {
+                ouvrirSession(httpRequest, request.email());
+                yield ResponseEntity.ok(new LoginResponse("Veuillez changer votre mot de passe", "/mot-de-passe"));
             }
             case INVALID_CREDENTIALS -> response(HttpStatus.UNAUTHORIZED,
                     "E-mail ou mot de passe incorrect");

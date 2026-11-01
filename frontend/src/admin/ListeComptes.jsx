@@ -152,6 +152,12 @@ export default function ListeComptes({
                     >
                       Modifier
                     </button>
+                    <button type="button" className="action" onClick={() => onReinitialiserMotDePasse(c)} aria-label={`Réinitialiser le mot de passe de ${c.prenom} ${c.nom}`}>
+                      Réinitialiser le mot de passe
+                    </button>
+                    {c.email === emailConnecte ? (
+                      <span className="muted vous">Vous</span>
+                    ) : (
                     {!estMoi && (
                       <button
                         type="button"
