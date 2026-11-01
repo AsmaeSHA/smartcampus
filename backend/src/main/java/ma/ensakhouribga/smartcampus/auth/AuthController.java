@@ -65,9 +65,30 @@ public class AuthController {
      */
     @GetMapping("/me")
     public ResponseEntity<UtilisateurConnecte> moi(HttpServletRequest request) {
-        return utilisateurCourant.depuis(request)
-                .map(user -> ResponseEntity.ok(UtilisateurConnecte.depuis(user)))
+        return utilisateurCourant.profilDepuis(request)
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    /** SC-69/70 : change le mot de passe de l'utilisateur connecté après vérification de l'ancien. */
+    @PutMapping("/password")
+    public ResponseEntity<LoginResponse> changerMotDePasse(@RequestBody ChangerMotDePasseRequest demande,
+                                                            HttpServletRequest request) {
+        return utilisateurCourant.depuis(request)
+                .map(user -> {
+                    if (demande == null || demande.nouveauMotDePasse() == null) {
+                        return response(HttpStatus.BAD_REQUEST, "Le nouveau mot de passe est obligatoire");
+                    }
+                    try {
+                        loginService.changerMotDePasse(user, demande.ancienMotDePasse(), demande.nouveauMotDePasse());
+                    } catch (IllegalArgumentException e) {
+                        return response(HttpStatus.BAD_REQUEST, e.getMessage());
+                    } catch (SecurityException e) {
+                        return response(HttpStatus.UNAUTHORIZED, e.getMessage());
+                    }
+                    return ResponseEntity.ok(new LoginResponse("Mot de passe modifié", "/accueil"));
+                })
+                .orElseGet(() -> response(HttpStatus.UNAUTHORIZED, "Veuillez vous connecter"));
     }
 
     /**

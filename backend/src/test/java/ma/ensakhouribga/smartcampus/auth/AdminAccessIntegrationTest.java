@@ -103,7 +103,20 @@ class AdminAccessIntegrationTest {
         mvc.perform(get("/api/auth/me").session(connecter(ETUDIANT)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("ETUDIANT"))
-                .andExpect(jsonPath("$.prenom").value("Etudiant"));
+                .andExpect(jsonPath("$.prenom").value("Etudiant"))
+                .andExpect(jsonPath("$.filiere").value("Génie Informatique"))
+                .andExpect(jsonPath("$.niveau").value("GI3"))
+                .andExpect(jsonPath("$.codeMassar").value("D111111111"));
+    }
+
+    @Test
+    void meRenvoieLesInformationsProfessionnellesDeLEnseignant() throws Exception {
+        mvc.perform(get("/api/auth/me").session(connecter(ENSEIGNANT)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ENSEIGNANT"))
+                .andExpect(jsonPath("$.specialite").value("Informatique"))
+                .andExpect(jsonPath("$.grade").value("PES"))
+                .andExpect(jsonPath("$.codeEnseignant").value("E0001"));
     }
 
     private MockHttpSession connecter(String email) throws Exception {
