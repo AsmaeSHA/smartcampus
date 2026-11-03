@@ -28,6 +28,7 @@ export default function ListeComptes({
   emailConnecte,
   onModifier,
   onChangerActivation,
+  onReinitialiserMotDePasse,
   onEffacerRole,
 }) {
   const [recherche, setRecherche] = useState('');
@@ -158,7 +159,6 @@ export default function ListeComptes({
                     {c.email === emailConnecte ? (
                       <span className="muted vous">Vous</span>
                     ) : (
-                    {!estMoi && (
                       <button
                         type="button"
                         className={c.actif ? 'bouton-ligne danger' : 'bouton-ligne succes-texte'}
