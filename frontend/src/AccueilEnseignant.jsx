@@ -32,6 +32,16 @@ export default function AccueilEnseignant({ utilisateur, onChangerMotDePasse }) 
             <p className="eyebrow">COMPTE</p><h2>Votre sécurité</h2>
             <p>Gardez votre mot de passe confidentiel et choisissez un mot de passe difficile à deviner.</p>
             <button className="role-link-button" type="button" onClick={onChangerMotDePasse}>Changer mon mot de passe <span aria-hidden="true">→</span></button>
+            <button 
+                type="button"
+                className="action" 
+                onClick={() => {
+                  window.history.pushState({}, '', '/espaces');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+              >
+                Consulter les espaces
+              </button>
           </aside>
         </section>
         <footer className="role-footer">SmartCampus <span>·</span> Votre campus, au même endroit.</footer>

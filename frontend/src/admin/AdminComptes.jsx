@@ -27,7 +27,7 @@ export default function AdminComptes({ emailConnecte }) {
   // null, « creer », « modifier » ou « importer »
   const [panneau, setPanneau] = useState(null);
   const [enModification, setEnModification] = useState(null);
-  const [message, setMessage] = useState('');
+  // SC-30 : mot de passe provisoire généré par l'administrateur
   const [dernierReinitialise, setDernierReinitialise] = useState(null);
 
   const charger = useCallback(async () => {
@@ -76,6 +76,7 @@ export default function AdminComptes({ emailConnecte }) {
   }
 
   function compteCree(resultat) {
+    setDernierReinitialise(null);
     setPanneau(null);
     setMessage('');
     setCopie(false);
@@ -133,15 +134,34 @@ export default function AdminComptes({ emailConnecte }) {
     }
   }
 
+  // SC-30 : l'administrateur génère un mot de passe provisoire pour un compte.
   async function reinitialiserMotDePasse(compte) {
     if (!window.confirm(`Générer un mot de passe provisoire pour ${compte.prenom} ${compte.nom} ? Son mot de passe actuel cessera de fonctionner.`)) return;
     try {
       const response = await fetch(`/api/admin/comptes/${compte.id}/reinitialiser-mot-de-passe`, { method: 'POST' });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) { setErreur(data.message || 'Réinitialisation impossible.'); return; }
-      setErreur(''); setDernierReinitialise(data); setCopie(false);
-      setComptes(liste => liste.map(c => c.id === data.compte.id ? data.compte : c));
-    } catch { setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.'); }
+      if (!response.ok) {
+        setErreur(data.message || 'Réinitialisation impossible.');
+        return;
+      }
+      setErreur('');
+      setMessage('');
+      setDernierCree(null);
+      setCopie(false);
+      setDernierReinitialise(data);
+      setComptes((liste) => liste.map((c) => (c.id === data.compte.id ? data.compte : c)));
+    } catch (err) {
+      setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
+    }
+  }
+
+  async function copierReinitialise() {
+    try {
+      await navigator.clipboard.writeText(dernierReinitialise.motDePasseTemporaire);
+      setCopie(true);
+    } catch {
+      setCopie(false);
+    }
   }
 
   async function copier() {
@@ -199,18 +219,6 @@ export default function AdminComptes({ emailConnecte }) {
           ))}
         </div>
 
-      {dernierReinitialise && (
-        <div className="succes" role="status">
-          <p>Mot de passe provisoire généré pour <strong>{dernierReinitialise.compte.email}</strong>. Il ne sera plus affiché après fermeture de cet écran.</p>
-          <div className="mot-de-passe"><code>{dernierReinitialise.motDePasseTemporaire}</code><button type="button" className="logout" onClick={async () => { try { await navigator.clipboard.writeText(dernierReinitialise.motDePasseTemporaire); setCopie(true); } catch { setCopie(false); } }}>{copie ? 'Copié' : 'Copier'}</button></div>
-        </div>
-      )}
-
-      {dernierCree && (
-        <div className="succes" role="status">
-          <p>
-            Compte créé pour <strong>{dernierCree.compte.email}</strong>. Transmettez ce mot de passe
-            temporaire à l’utilisateur : il ne sera plus affiché.
         {erreur && (
           <p role="alert" className="alerte alerte-erreur">
             {erreur}
@@ -245,6 +253,25 @@ export default function AdminComptes({ emailConnecte }) {
           </div>
         )}
 
+        {dernierReinitialise && (
+          <div role="status" className="alerte alerte-succes alerte-mot-de-passe">
+            <p>
+              Mot de passe provisoire généré pour <strong>{dernierReinitialise.compte.email}</strong>. Il ne sera
+              plus affiché après fermeture de ce message.
+            </p>
+            <div className="mot-de-passe">
+              <code>{dernierReinitialise.motDePasseTemporaire}</code>
+              <button type="button" className="bouton-secondaire" onClick={copierReinitialise}>
+                {copie ? 'Copié ✓' : 'Copier'}
+              </button>
+              <button type="button" className="alerte-fermer" onClick={() => setDernierReinitialise(null)}
+                aria-label="Fermer le message">
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         <ListeComptes
           comptes={comptes}
           chargement={chargement}
@@ -252,6 +279,7 @@ export default function AdminComptes({ emailConnecte }) {
           emailConnecte={emailConnecte}
           onModifier={ouvrirModification}
           onChangerActivation={changerActivation}
+          onReinitialiserMotDePasse={reinitialiserMotDePasse}
           onEffacerRole={() => setFiltreRole('TOUS')}
         />
       </div>
@@ -280,16 +308,6 @@ export default function AdminComptes({ emailConnecte }) {
       {panneau === 'importer' && (
         <Panneau titre="Importer depuis un CSV" sousTitre="Créez plusieurs comptes en une seule fois." onFermer={fermerPanneau}>
           <ImportComptes onImporte={charger} />
-        </div>
-        <ListeComptes
-          comptes={comptes}
-          chargement={chargement}
-          emailConnecte={emailConnecte}
-          onChangerActivation={changerActivation}
-          onModifier={ouvrirModification}
-          onReinitialiserMotDePasse={reinitialiserMotDePasse}
-        />
-      </div>
         </Panneau>
       )}
     </div>

@@ -144,31 +144,33 @@ export default function ListeComptes({
                     {c.changerMotDePasse && <span className="indice">Mot de passe à changer</span>}
                   </td>
                   <td className="actions">
-                    <button
-                      type="button"
-                      className="bouton-ligne"
-                      onClick={() => onModifier(c)}
-                      aria-label={`Modifier le compte de ${c.prenom} ${c.nom}`}
-                    >
-                      Modifier
-                    </button>
-                    <button type="button" className="action" onClick={() => onReinitialiserMotDePasse(c)} aria-label={`Réinitialiser le mot de passe de ${c.prenom} ${c.nom}`}>
-                      Réinitialiser le mot de passe
-                    </button>
-                    {c.email === emailConnecte ? (
-                      <span className="muted vous">Vous</span>
-                    ) : (
-                    {!estMoi && (
-                      <button
-                        type="button"
-                        className={c.actif ? 'bouton-ligne danger' : 'bouton-ligne succes-texte'}
-                        onClick={() => onChangerActivation(c)}
-                        aria-label={`${c.actif ? 'Désactiver' : 'Réactiver'} le compte de ${c.prenom} ${c.nom}`}
-                      >
-                        {c.actif ? 'Désactiver' : 'Réactiver'}
-                      </button>
-                    )}
-                  </td>
+  <button
+    type="button"
+    className="bouton-ligne"
+    onClick={() => onModifier(c)}
+    aria-label={`Modifier le compte de ${c.prenom} ${c.nom}`}
+  >
+    Modifier
+  </button>
+  <button
+    type="button"
+    className="bouton-ligne"
+    onClick={() => onReinitialiserMotDePasse(c)}
+    aria-label={`Réinitialiser le mot de passe de ${c.prenom} ${c.nom}`}
+  >
+    Réinitialiser le mot de passe
+  </button>
+  {!estMoi && (
+    <button
+      type="button"
+      className={c.actif ? 'bouton-ligne danger' : 'bouton-ligne succes-texte'}
+      onClick={() => onChangerActivation(c)}
+      aria-label={`${c.actif ? 'Désactiver' : 'Réactiver'} le compte de ${c.prenom} ${c.nom}`}
+    >
+      {c.actif ? 'Désactiver' : 'Réactiver'}
+    </button>
+  )}
+</td>
                 </tr>
               );
             })}

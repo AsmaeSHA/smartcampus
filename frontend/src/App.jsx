@@ -6,6 +6,8 @@ import AdminComptes from './admin/AdminComptes.jsx';
 import ChangerMotDePasse from './ChangerMotDePasse.jsx';
 import AccueilEtudiant from './AccueilEtudiant.jsx';
 import AccueilEnseignant from './AccueilEnseignant.jsx';
+import ListeEspaces from './espaces/ListeEspaces.jsx'; 
+
 
 export default function App() {
   // undefined : vérification en cours ; null : non connecté ; objet : utilisateur connecté.
@@ -77,6 +79,23 @@ export default function App() {
         </aside>
         <main className="panel">
           <ChangerMotDePasse onChange={() => { window.history.replaceState({}, '', '/accueil'); window.location.reload(); }} />
+        </main>
+      </div>
+    );
+  }
+
+    if (utilisateur && chemin === '/espaces') {
+    return (
+      <div className="admin-shell">
+        <header className="admin-top">
+          <p className="brand">SmartCampus</p>
+          <div className="admin-user">
+            <button type="button" className="bouton-clair" onClick={() => naviguer('/accueil')}>Retour à l'accueil</button>
+            <LogoutButton onLogout={() => setUtilisateur(null)} />
+          </div>
+        </header>
+        <main className="admin-main">
+          <ListeEspaces />
         </main>
       </div>
     );
