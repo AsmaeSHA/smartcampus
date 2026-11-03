@@ -46,6 +46,15 @@ public class EspaceController {
         return ResponseEntity.ok(espaceService.lister());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<EspaceResume> details(@PathVariable Long id, HttpServletRequest request) {
+        // On vérifie que l'utilisateur est connecté
+        if (utilisateurCourant.profilDepuis(request).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(espaceService.trouverParId(id));
+    }
+
     @PutMapping("/{id}")
     public EspaceResume modifier(@PathVariable Long id, @Valid @RequestBody CreerEspaceRequest demande) {
         return espaceService.modifier(id, demande);

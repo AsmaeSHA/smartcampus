@@ -40,6 +40,13 @@ public class EspaceService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public EspaceResume trouverParId(Long id) {
+        Espace espace = espaces.findById(id)
+                .orElseThrow(() -> new EspaceIntrouvableException("Cet espace n'existe pas"));
+        return EspaceResume.depuis(espace);
+    }
+
     @Transactional
     public EspaceResume modifier(Long id, CreerEspaceRequest demande) {
         Espace espace = espaces.findById(id)
