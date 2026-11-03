@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CreerCompteForm from './CreerCompteForm.jsx';
+import CreerEspaceForm from './CreerEspaceForm.jsx';
+import ModifierEspaceForm from './ModifierEspaceForm.jsx';
+import ListeEspaces from './ListeEspaces.jsx';
 import ImportComptes from './ImportComptes.jsx';
 import ListeComptes from './ListeComptes.jsx';
 import Panneau from './Panneau.jsx';
 import './admin.css';
-
-// Page « Gestion des comptes » de l'administrateur (SC-27, SC-28, SC-64, SC-53).
-// La liste occupe toute la largeur ; création, modification et import s'ouvrent dans un panneau latéral.
 
 const TUILES = [
   { role: 'TOUS', libelle: 'Tous les comptes' },
@@ -22,13 +22,14 @@ export default function AdminComptes({ emailConnecte }) {
   const [erreur, setErreur] = useState('');
   const [message, setMessage] = useState('');
   const [dernierCree, setDernierCree] = useState(null);
+  const [dernierReinitialise, setDernierReinitialise] = useState(null);
   const [copie, setCopie] = useState(false);
   const [filtreRole, setFiltreRole] = useState('TOUS');
-  // null, « creer », « modifier » ou « importer »
-  const [panneau, setPanneau] = useState(null);
+  const [panneau, setPanneau] = useState(null); 
   const [enModification, setEnModification] = useState(null);
-  // SC-30 : mot de passe provisoire généré par l'administrateur
-  const [dernierReinitialise, setDernierReinitialise] = useState(null);
+  const [espaceEnModification, setEspaceEnModification] = useState(null);
+  const [actualisationEspaces, setActualisationEspaces] = useState(0);
+  const [ongletActif, setOngletActif] = useState('comptes'); // 'comptes' ou 'espaces'
 
   const charger = useCallback(async () => {
     setChargement(true);
@@ -44,35 +45,25 @@ export default function AdminComptes({ emailConnecte }) {
       setComptes(await rComptes.json());
       setNiveaux(await rNiveaux.json());
       setErreur('');
-    } catch (err) {
+    } catch (error) {
       setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
     } finally {
       setChargement(false);
     }
   }, []);
 
-  useEffect(() => {
-    charger();
-  }, [charger]);
+  useEffect(() => { charger(); }, [charger]);
 
   const compteurs = useMemo(() => {
-    const parRole = { TOUS: comptes.length, ETUDIANT: 0, ENSEIGNANT: 0, ADMINISTRATEUR: 0 };
-    comptes.forEach((c) => {
-      parRole[c.role] += 1;
-    });
-    return parRole;
+    const resultat = { TOUS: comptes.length, ETUDIANT: 0, ENSEIGNANT: 0, ADMINISTRATEUR: 0 };
+    comptes.forEach((compte) => { resultat[compte.role] += 1; });
+    return resultat;
   }, [comptes]);
 
-  const desactives = comptes.filter((c) => !c.actif).length;
-
-  const fermerPanneau = useCallback(() => {
+  function fermerPanneau() {
     setPanneau(null);
     setEnModification(null);
-  }, []);
-
-  function ouvrirCreation() {
-    setEnModification(null);
-    setPanneau('creer');
+    setEspaceEnModification(null);
   }
 
   function compteCree(resultat) {
@@ -84,7 +75,18 @@ export default function AdminComptes({ emailConnecte }) {
     charger();
   }
 
-  // SC-64 : charge le détail du compte puis ouvre le formulaire pré-rempli.
+  function espaceCree(resultat) {
+    fermerPanneau();
+    setMessage(`L’espace ${resultat.code} a été créé et est actif.`);
+    setActualisationEspaces((valeur) => valeur + 1);
+  }
+
+  function espaceModifie(resultat) {
+    fermerPanneau();
+    setMessage(`L’espace ${resultat.code} a été modifié.`);
+    setActualisationEspaces((valeur) => valeur + 1);
+  }
+
   async function ouvrirModification(compte) {
     try {
       const response = await fetch(`/api/admin/comptes/${compte.id}`);
@@ -93,31 +95,24 @@ export default function AdminComptes({ emailConnecte }) {
         setErreur(data.message || 'Impossible de charger ce compte.');
         return;
       }
-      setErreur('');
       setEnModification(data);
       setPanneau('modifier');
-    } catch (err) {
+    } catch (error) {
       setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
     }
   }
 
   function compteModifie(resultat) {
     fermerPanneau();
-    setDernierCree(null);
     setMessage(`Le compte de ${resultat.prenom} ${resultat.nom} a été modifié.`);
-    setComptes((liste) => liste.map((c) => (c.id === resultat.id ? resultat : c)));
+    setComptes((liste) => liste.map((compte) => compte.id === resultat.id ? resultat : compte));
   }
 
-  // SC-28 : désactive ou réactive un compte, après confirmation.
   async function changerActivation(compte) {
     const action = compte.actif ? 'desactiver' : 'reactiver';
-    const question = compte.actif
-      ? `Désactiver le compte de ${compte.prenom} ${compte.nom} ? Il ne pourra plus se connecter, mais ses données seront conservées.`
-      : `Réactiver le compte de ${compte.prenom} ${compte.nom} ?`;
-    if (!window.confirm(question)) {
-      return;
-    }
-
+    if (!window.confirm(compte.actif
+      ? `Désactiver le compte de ${compte.prenom} ${compte.nom} ?`
+      : `Réactiver le compte de ${compte.prenom} ${compte.nom} ?`)) return;
     try {
       const response = await fetch(`/api/admin/comptes/${compte.id}/${action}`, { method: 'PATCH' });
       const data = await response.json().catch(() => ({}));
@@ -125,18 +120,15 @@ export default function AdminComptes({ emailConnecte }) {
         setErreur(data.message || 'Action impossible. Réessayez plus tard.');
         return;
       }
-      setErreur('');
-      setDernierCree(null);
+      setComptes((liste) => liste.map((element) => element.id === data.id ? data : element));
       setMessage(`Le compte de ${data.prenom} ${data.nom} a été ${data.actif ? 'réactivé' : 'désactivé'}.`);
-      setComptes((liste) => liste.map((c) => (c.id === data.id ? data : c)));
-    } catch (err) {
+    } catch (error) {
       setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
     }
   }
 
-  // SC-30 : l'administrateur génère un mot de passe provisoire pour un compte.
   async function reinitialiserMotDePasse(compte) {
-    if (!window.confirm(`Générer un mot de passe provisoire pour ${compte.prenom} ${compte.nom} ? Son mot de passe actuel cessera de fonctionner.`)) return;
+    if (!window.confirm(`Générer un mot de passe provisoire pour ${compte.prenom} ${compte.nom} ?`)) return;
     try {
       const response = await fetch(`/api/admin/comptes/${compte.id}/reinitialiser-mot-de-passe`, { method: 'POST' });
       const data = await response.json().catch(() => ({}));
@@ -155,20 +147,11 @@ export default function AdminComptes({ emailConnecte }) {
     }
   }
 
-  async function copierReinitialise() {
+  async function copier(valeur) {
     try {
-      await navigator.clipboard.writeText(dernierReinitialise.motDePasseTemporaire);
+      await navigator.clipboard.writeText(valeur);
       setCopie(true);
-    } catch {
-      setCopie(false);
-    }
-  }
-
-  async function copier() {
-    try {
-      await navigator.clipboard.writeText(dernierCree.motDePasseTemporaire);
-      setCopie(true);
-    } catch (err) {
+    } catch (error) {
       setCopie(false);
     }
   }
@@ -179,135 +162,159 @@ export default function AdminComptes({ emailConnecte }) {
         <div className="bandeau-contenu">
           <div>
             <p className="surtitre">Administration</p>
-            <h1>Gestion des comptes</h1>
-            <p className="bandeau-texte">
-              {compteurs.TOUS} compte{compteurs.TOUS > 1 ? 's' : ''}
-              {desactives > 0 && ` · ${desactives} désactivé${desactives > 1 ? 's' : ''}`}
-            </p>
+            <h1>Gestion des comptes et des espaces</h1>
+            <p className="bandeau-texte">{compteurs.TOUS} compte{compteurs.TOUS > 1 ? 's' : ''}</p>
           </div>
           <div className="bandeau-actions">
-            <button type="button" className="bouton-clair" onClick={() => setPanneau('importer')}>
-              <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-                <path d="M10 13V3M6 7l4-4 4 4M4 13v3h12v-3" fill="none" stroke="currentColor" strokeWidth="1.7"
-                  strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Importer un CSV
-            </button>
-            <button type="button" className="bouton-menthe" onClick={ouvrirCreation}>
-              <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-                <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-              </svg>
-              Nouveau compte
-            </button>
+            {ongletActif === 'comptes' ? (
+              <>
+                <button type="button" className="bouton-clair" onClick={() => setPanneau('importer')}>Importer un CSV</button>
+                <button type="button" className="bouton-menthe" onClick={() => setPanneau('creer')}>Nouveau compte</button>
+              </>
+            ) : (
+              <button type="button" className="bouton-menthe" onClick={() => setPanneau('espace')}>Créer un espace</button>
+            )}
           </div>
         </div>
       </section>
 
       <div className="admin-contenu">
-        <div className="tuiles" role="group" aria-label="Filtrer par rôle">
-          {TUILES.map((t) => (
-            <button
-              key={t.role}
-              type="button"
-              className={filtreRole === t.role ? 'tuile active' : 'tuile'}
-              aria-pressed={filtreRole === t.role}
-              onClick={() => setFiltreRole(t.role)}
-            >
-              <span className="tuile-nombre">{compteurs[t.role]}</span>
-              <span className="tuile-libelle">{t.libelle}</span>
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button 
+            className={ongletActif === 'comptes' ? 'bouton-menthe' : 'bouton-clair'} 
+            onClick={() => setOngletActif('comptes')}
+          >
+            Gérer les comptes
+          </button>
+          <button 
+            className={ongletActif === 'espaces' ? 'bouton-menthe' : 'bouton-clair'} 
+            onClick={() => setOngletActif('espaces')}
+          >
+            Gérer les espaces
+          </button>
         </div>
 
-        {erreur && (
-          <p role="alert" className="alerte alerte-erreur">
-            {erreur}
-          </p>
-        )}
-
-        {message && (
-          <p role="status" className="alerte alerte-succes">
-            {message}
-            <button type="button" className="alerte-fermer" onClick={() => setMessage('')} aria-label="Fermer le message">
-              ×
-            </button>
-          </p>
-        )}
-
-        {dernierCree && (
-          <div role="status" className="alerte alerte-succes alerte-mot-de-passe">
-            <p>
-              Compte créé pour <strong>{dernierCree.compte.email}</strong>. Transmettez ce mot de passe
-              temporaire à l’utilisateur : il ne sera plus affiché.
-            </p>
-            <div className="mot-de-passe">
-              <code>{dernierCree.motDePasseTemporaire}</code>
-              <button type="button" className="bouton-secondaire" onClick={copier}>
-                {copie ? 'Copié ✓' : 'Copier'}
-              </button>
-              <button type="button" className="alerte-fermer" onClick={() => setDernierCree(null)}
-                aria-label="Fermer le message">
-                ×
-              </button>
+        {ongletActif === 'comptes' && (
+          <>
+            <div className="tuiles" role="group" aria-label="Filtrer par rôle">
+              {TUILES.map((tuile) => (
+                <button key={tuile.role} type="button" className={filtreRole === tuile.role ? 'tuile active' : 'tuile'}
+                  aria-pressed={filtreRole === tuile.role} onClick={() => setFiltreRole(tuile.role)}>
+                  <span className="tuile-nombre">{compteurs[tuile.role]}</span>
+                  <span className="tuile-libelle">{tuile.libelle}</span>
+                </button>
+              ))}
             </div>
+
+            {erreur && (
+              <p role="alert" className="alerte alerte-erreur">
+                {erreur}
+              </p>
+            )}
+
+            {message && (
+              <p role="status" className="alerte alerte-succes">
+                {message}
+                <button type="button" className="alerte-fermer" onClick={() => setMessage('')} aria-label="Fermer le message">
+                  ×
+                </button>
+              </p>
+            )}
+
+            {dernierCree && (
+              <div role="status" className="alerte alerte-succes alerte-mot-de-passe">
+                <p>Compte créé pour <strong>{dernierCree.compte.email}</strong>. Transmettez ce mot de passe temporaire.</p>
+                <code>{dernierCree.motDePasseTemporaire}</code>
+                <button type="button" className="bouton-secondaire" onClick={() => copier(dernierCree.motDePasseTemporaire)}>{copie ? 'Copié ✓' : 'Copier'}</button>
+              </div>
+            )}
+
+            {dernierReinitialise && (
+              <div role="status" className="alerte alerte-succes alerte-mot-de-passe">
+                <p>
+                  Mot de passe provisoire généré pour <strong>{dernierReinitialise.compte.email}</strong>. Il ne sera
+                  plus affiché après fermeture de ce message.
+                </p>
+                <div className="mot-de-passe">
+                  <code>{dernierReinitialise.motDePasseTemporaire}</code>
+                  <button type="button" className="bouton-secondaire" onClick={() => copier(dernierReinitialise.motDePasseTemporaire)}>
+                    {copie ? 'Copié ✓' : 'Copier'}
+                  </button>
+                  <button type="button" className="alerte-fermer" onClick={() => setDernierReinitialise(null)}
+                    aria-label="Fermer le message">
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <ListeComptes
+              comptes={comptes}
+              chargement={chargement}
+              filtreRole={filtreRole}
+              emailConnecte={emailConnecte}
+              onModifier={ouvrirModification}
+              onChangerActivation={changerActivation}
+              onReinitialiserMotDePasse={reinitialiserMotDePasse}
+              onEffacerRole={() => setFiltreRole('TOUS')}
+            />
+          </>
+        )}
+
+        {/* {ongletActif === 'espaces' && (
+          <>
+            {message && (
+              <p role="status" className="alerte alerte-succes">
+                {message}
+                <button type="button" className="alerte-fermer" onClick={() => setMessage('')}>×</button>
+              </p>
+            )}
+            <ListeEspaces rechargement={actualisationEspaces} />
+          </>
+        )} */}
+                {ongletActif === 'espaces' && (
+          <div style={{ gridColumn: '1 / -1', width: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {message && (
+              <p role="status" className="alerte alerte-succes">
+                {message}
+                <button type="button" className="alerte-fermer" onClick={() => setMessage('')}>×</button>
+              </p>
+            )}
+            <ListeEspaces rechargement={actualisationEspaces} />
           </div>
         )}
-
-        {dernierReinitialise && (
-          <div role="status" className="alerte alerte-succes alerte-mot-de-passe">
-            <p>
-              Mot de passe provisoire généré pour <strong>{dernierReinitialise.compte.email}</strong>. Il ne sera
-              plus affiché après fermeture de ce message.
-            </p>
-            <div className="mot-de-passe">
-              <code>{dernierReinitialise.motDePasseTemporaire}</code>
-              <button type="button" className="bouton-secondaire" onClick={copierReinitialise}>
-                {copie ? 'Copié ✓' : 'Copier'}
-              </button>
-              <button type="button" className="alerte-fermer" onClick={() => setDernierReinitialise(null)}
-                aria-label="Fermer le message">
-                ×
-              </button>
-            </div>
-          </div>
-        )}
-
-        <ListeComptes
-          comptes={comptes}
-          chargement={chargement}
-          filtreRole={filtreRole}
-          emailConnecte={emailConnecte}
-          onModifier={ouvrirModification}
-          onChangerActivation={changerActivation}
-          onReinitialiserMotDePasse={reinitialiserMotDePasse}
-          onEffacerRole={() => setFiltreRole('TOUS')}
-        />
       </div>
 
-      {(panneau === 'creer' || panneau === 'modifier') && (
+      {panneau && (
         <Panneau
-          titre={panneau === 'modifier' ? 'Modifier le compte' : 'Nouveau compte'}
+          titre={
+            panneau === 'espace' ? 'Créer un espace' : 
+            panneau === 'modifier-espace' ? 'Modifier l’espace' : 
+            panneau === 'modifier' ? 'Modifier le compte' : 
+            panneau === 'importer' ? 'Importer depuis un CSV' : 'Nouveau compte'
+          }
           sousTitre={
-            panneau === 'modifier'
-              ? `${enModification.prenom} ${enModification.nom}`
-              : 'Un mot de passe temporaire sera généré.'
+            panneau === 'espace' ? 'L’espace sera créé avec le statut actif.' : 
+            panneau === 'modifier-espace' ? espaceEnModification?.code : ''
           }
           onFermer={fermerPanneau}
         >
-          <CreerCompteForm
-            key={enModification ? enModification.id : 'nouveau'}
-            niveaux={niveaux}
-            compte={enModification}
-            onCree={compteCree}
-            onModifie={compteModifie}
-            onAnnuler={fermerPanneau}
-          />
-        </Panneau>
-      )}
-
-      {panneau === 'importer' && (
-        <Panneau titre="Importer depuis un CSV" sousTitre="Créez plusieurs comptes en une seule fois." onFermer={fermerPanneau}>
-          <ImportComptes onImporte={charger} />
+          {panneau === 'creer' || panneau === 'modifier' ? (
+            <CreerCompteForm
+              key={enModification ? enModification.id : 'nouveau'}
+              niveaux={niveaux}
+              compte={enModification}
+              onCree={compteCree}
+              onModifie={compteModifie}
+              onAnnuler={fermerPanneau}
+            />
+          ) : panneau === 'espace' ? (
+            <CreerEspaceForm onCree={espaceCree} />
+          ) : panneau === 'modifier-espace' ? (
+            <ModifierEspaceForm espace={espaceEnModification} onModifie={espaceModifie} onAnnuler={fermerPanneau} />
+          ) : panneau === 'importer' ? (
+            <ImportComptes onImporte={charger} />
+          ) : null}
         </Panneau>
       )}
     </div>

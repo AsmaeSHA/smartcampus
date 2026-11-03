@@ -6,7 +6,7 @@ import AdminComptes from './admin/AdminComptes.jsx';
 import ChangerMotDePasse from './ChangerMotDePasse.jsx';
 import AccueilEtudiant from './AccueilEtudiant.jsx';
 import AccueilEnseignant from './AccueilEnseignant.jsx';
-import ListeEspaces from './espaces/ListeEspaces.jsx'; 
+import ListeEspaces from './admin/ListeEspaces.jsx';
 
 
 export default function App() {
@@ -84,7 +84,7 @@ export default function App() {
     );
   }
 
-    if (utilisateur && chemin === '/espaces') {
+   if (utilisateur && chemin === '/espaces') {
     return (
       <div className="admin-shell">
         <header className="admin-top">
@@ -95,7 +95,7 @@ export default function App() {
           </div>
         </header>
         <main className="admin-main">
-          <ListeEspaces />
+          <ListeEspaces onNonConnecte={() => setUtilisateur(null)} />
         </main>
       </div>
     );

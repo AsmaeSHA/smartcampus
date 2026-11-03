@@ -1,0 +1,214 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import './css/espaces.css';
+
+const PAR_PAGE = 12;
+
+export const LIBELLES_TYPE = {
+  SALLE_COURS: 'Salle de cours',
+  SALLE_REUNION: 'Salle de réunion',
+  AMPHITHEATRE: 'Amphithéâtre',
+  BIBLIOTHEQUE: 'Bibliothèque',
+  TERRAIN: 'Terrain',
+  BUVETTE: 'Buvette',
+};
+
+const LIBELLES_STATUT = {
+  ACTIVE: 'Active',
+  ARCHIVEE: 'Archivée',
+};
+
+function normaliser(texte) {
+  return (texte || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase();
+}
+
+function libelleStatut(statut) {
+  return LIBELLES_STATUT[statut] || statut || 'Non renseigné';
+}
+
+export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
+  const [espaces, setEspaces] = useState([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState('');
+  const [recherche, setRecherche] = useState('');
+  const [page, setPage] = useState(1);
+
+  const nonConnecteRef = useRef(onNonConnecte);
+  nonConnecteRef.current = onNonConnecte;
+
+  const charger = useCallback(async () => {
+    setChargement(true);
+    setErreur('');
+
+    try {
+      const response = await fetch('/api/espaces', {
+        credentials: 'include',
+      });
+
+      if (response.status === 401) {
+        nonConnecteRef.current?.();
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setErreur(data.message || 'Impossible de charger les espaces.');
+        return;
+      }
+
+      const data = await response.json();
+      setEspaces(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
+    } finally {
+      setChargement(false);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    charger();
+  }, [rechargement]); 
+
+  useEffect(() => {
+    setPage(1);
+  }, [recherche]);
+
+  const filtres = useMemo(() => {
+    const terme = normaliser(recherche.trim());
+
+    return espaces.filter((espace) => {
+      // On n'affiche que les espaces actifs
+      if (espace.statut === 'ARCHIVEE') return false;
+      
+      // Recherche par code ou nom
+      if (!terme) return true;
+      return normaliser(`${espace.code || ''} ${espace.nom || ''}`).includes(terme);
+    });
+  }, [espaces, recherche]);
+
+  const pages = Math.max(1, Math.ceil(filtres.length / PAR_PAGE));
+  const pageCourante = Math.min(page, pages);
+  const debut = (pageCourante - 1) * PAR_PAGE;
+  const visibles = filtres.slice(debut, debut + PAR_PAGE);
+
+  return (
+    <section className="liste-comptes liste-espaces" aria-label="Liste des espaces">
+      <div className="barre-outils">
+        <div className="recherche">
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+            <circle cx="9" cy="9" r="5.8" fill="none" stroke="currentColor" strokeWidth="1.7" />
+            <path d="M13.3 13.3L17 17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          </svg> 
+          <label htmlFor="recherche-espace" className="sr-only">
+            Rechercher un espace
+          </label>
+          <input
+            id="recherche-espace"
+            type="search"
+            placeholder="Rechercher par code ou nom"
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+          />
+        </div>
+
+        <p className="resultats" aria-live="polite">
+          {filtres.length} espace{filtres.length > 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {chargement && espaces.length === 0 && (
+        <p className="vide">Chargement des espaces…</p>
+      )}
+
+      {erreur && (
+        <div className="vide">
+          <p role="alert" className="error">{erreur}</p>
+          <button type="button" className="bouton-secondaire" onClick={charger}>
+            Réessayer
+          </button>
+        </div>
+      )}
+
+      {!chargement && !erreur && filtres.length === 0 && (
+        <div className="vide">
+          <p>
+            {espaces.length === 0
+              ? 'Aucun espace pour l’instant.'
+              : 'Aucun espace ne correspond à votre recherche.'}
+          </p>
+        </div>
+      )}
+
+      {visibles.length > 0 && (
+        <div className="table-responsive">
+          <table className="table-comptes table-espaces">
+            <thead>
+              <tr>
+                <th scope="col" className="col-code">Code</th>
+                <th scope="col" className="col-nom">Nom</th>
+                <th scope="col" className="col-type">Type</th>
+                <th scope="col" className="col-statut">État</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibles.map((espace) => {
+                const actif = espace.statut === 'ACTIVE';
+                return (
+                  <tr key={espace.id ?? espace.code}>
+                    <td>
+                      <span className="code-espace">{espace.code}</span>
+                    </td>
+                    <td>
+                      <span className="nom-espace">{espace.nom}</span>
+                    </td>
+                    <td>
+                      <span className="type-espace">
+                        {LIBELLES_TYPE[espace.typeEspace] || espace.typeEspace || 'Non renseigné'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={actif ? 'etat etat-actif' : 'etat etat-inactif'}>
+                        <span className="point" aria-hidden="true" />
+                        {libelleStatut(espace.statut)}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {filtres.length > PAR_PAGE && (
+        <nav className="pagination" aria-label="Pagination de la liste des espaces">
+          <p>
+            {debut + 1}–{Math.min(debut + PAR_PAGE, filtres.length)} sur {filtres.length}
+          </p>
+          <div>
+            <button
+              type="button"
+              className="bouton-secondaire"
+              onClick={() => setPage(pageCourante - 1)}
+              disabled={pageCourante === 1}
+            >
+              Précédent
+            </button>
+            <span>Page {pageCourante} / {pages}</span>
+            <button
+              type="button"
+              className="bouton-secondaire"
+              onClick={() => setPage(pageCourante + 1)}
+              disabled={pageCourante === pages}
+            >
+              Suivant
+            </button>
+          </div>
+        </nav>
+      )}
+    </section>
+  );
+}
