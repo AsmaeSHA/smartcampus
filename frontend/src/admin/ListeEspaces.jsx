@@ -33,6 +33,10 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
   const [recherche, setRecherche] = useState('');
+  
+  // ⭐ État pour le filtre par type
+  const [type, setType] = useState('tous');
+  
   const [page, setPage] = useState(1);
 
   const nonConnecteRef = useRef(onNonConnecte);
@@ -67,32 +71,41 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
     }
   }, []);
 
-
   useEffect(() => {
     charger();
-  }, [rechargement]); 
+  }, [rechargement]);
 
+  // On remet la page à 1 quand on tape une recherche ou qu'on change le filtre
   useEffect(() => {
     setPage(1);
-  }, [recherche]);
+  }, [recherche, type]);
 
   const filtres = useMemo(() => {
     const terme = normaliser(recherche.trim());
 
     return espaces.filter((espace) => {
-      // On n'affiche que les espaces actifs
       if (espace.statut === 'ARCHIVEE') return false;
       
-      // Recherche par code ou nom
+      // ⭐ Logique de filtrage par type
+      if (type !== 'tous' && espace.typeEspace !== type) return false;
+      
       if (!terme) return true;
       return normaliser(`${espace.code || ''} ${espace.nom || ''}`).includes(terme);
     });
-  }, [espaces, recherche]);
+  }, [espaces, recherche, type]);
 
   const pages = Math.max(1, Math.ceil(filtres.length / PAR_PAGE));
   const pageCourante = Math.min(page, pages);
   const debut = (pageCourante - 1) * PAR_PAGE;
   const visibles = filtres.slice(debut, debut + PAR_PAGE);
+
+  // Vérifie si des filtres sont actifs pour afficher le bouton "Effacer"
+  const filtresActifs = recherche.trim() !== '' || type !== 'tous';
+
+  function effacerFiltres() {
+    setRecherche('');
+    setType('tous');
+  }
 
   return (
     <section className="liste-comptes liste-espaces" aria-label="Liste des espaces">
@@ -113,6 +126,24 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
             onChange={(e) => setRecherche(e.target.value)}
           />
         </div>
+
+        {/* ⭐ LE MENU DÉROULANT DU FILTRE ⭐ */}
+        <label htmlFor="filtre-type" className="sr-only">
+          Filtrer par type
+        </label>
+        <select
+          id="filtre-type"
+          className="filtre-etat"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+        >
+          <option value="tous">Tous les types</option>
+          {Object.entries(LIBELLES_TYPE).map(([valeur, libelle]) => (
+            <option key={valeur} value={valeur}>
+              {libelle}
+            </option>
+          ))}
+        </select>
 
         <p className="resultats" aria-live="polite">
           {filtres.length} espace{filtres.length > 1 ? 's' : ''}
@@ -139,6 +170,11 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
               ? 'Aucun espace pour l’instant.'
               : 'Aucun espace ne correspond à votre recherche.'}
           </p>
+          {filtresActifs && (
+            <button type="button" className="bouton-secondaire" onClick={effacerFiltres}>
+              Effacer les filtres
+            </button>
+          )}
         </div>
       )}
 

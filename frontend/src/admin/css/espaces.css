@@ -28,6 +28,10 @@
   min-width: 0;
 }
 
+.liste-espaces .filtre-etat {
+  flex: 0 0 auto; /* Empêche le filtre de rétrécir */
+}
+
 .liste-espaces .resultats {
   flex: 0 0 auto;
   margin: 0 0 0 auto !important;
