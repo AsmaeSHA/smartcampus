@@ -17,10 +17,17 @@ const LIBELLES_STATUT = {
   ARCHIVEE: 'Archivée',
 };
 
+// function normaliser(texte) {
+//   return (texte || '')
+//     .normalize('NFD')
+//     .replace(/\p{M}/gu, '')
+//     .toLowerCase();
+// }
+
 function normaliser(texte) {
   return (texte || '')
     .normalize('NFD')
-    .replace(/\p{M}/gu, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 }
 
@@ -34,9 +41,7 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
   const [erreur, setErreur] = useState('');
   const [recherche, setRecherche] = useState('');
   
-  // ⭐ État pour le filtre par type
   const [type, setType] = useState('tous');
-  
   const [page, setPage] = useState(1);
 
   const nonConnecteRef = useRef(onNonConnecte);
@@ -75,7 +80,6 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
     charger();
   }, [rechargement]);
 
-  // On remet la page à 1 quand on tape une recherche ou qu'on change le filtre
   useEffect(() => {
     setPage(1);
   }, [recherche, type]);
@@ -85,10 +89,7 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
 
     return espaces.filter((espace) => {
       if (espace.statut === 'ARCHIVEE') return false;
-      
-      // ⭐ Logique de filtrage par type
       if (type !== 'tous' && espace.typeEspace !== type) return false;
-      
       if (!terme) return true;
       return normaliser(`${espace.code || ''} ${espace.nom || ''}`).includes(terme);
     });
@@ -99,13 +100,35 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
   const debut = (pageCourante - 1) * PAR_PAGE;
   const visibles = filtres.slice(debut, debut + PAR_PAGE);
 
-  // Vérifie si des filtres sont actifs pour afficher le bouton "Effacer"
   const filtresActifs = recherche.trim() !== '' || type !== 'tous';
 
   function effacerFiltres() {
     setRecherche('');
     setType('tous');
   }
+
+  // ⭐ FONCTION POUR ALLER VERS LES DÉTAILS ⭐
+  //   function voirDetails(id) {
+  //   console.log("ID cliqué :", id); // Pour tester
+  //   if (!id) {
+  //     alert("Erreur : l'ID de l'espace est introuvable.");
+  //     return;
+  //   }
+  //   window.history.pushState({}, '', `/espaces/${id}`);
+  //   window.dispatchEvent(new PopStateEvent('popstate'));
+  // }
+
+function voirDetails(id) {
+  if (!id) {
+    alert("Erreur : l'identifiant de cet espace est introuvable.");
+    return;
+  }
+
+  console.log("Je vais vers l'espace :", id);
+
+  window.history.pushState({}, '', `/espaces/${id}`);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
 
   return (
     <section className="liste-comptes liste-espaces" aria-label="Liste des espaces">
@@ -127,7 +150,6 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
           />
         </div>
 
-        {/* ⭐ LE MENU DÉROULANT DU FILTRE ⭐ */}
         <label htmlFor="filtre-type" className="sr-only">
           Filtrer par type
         </label>
@@ -187,6 +209,8 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
                 <th scope="col" className="col-nom">Nom</th>
                 <th scope="col" className="col-type">Type</th>
                 <th scope="col" className="col-statut">État</th>
+                {/* ⭐ NOUVELLE COLONNE ⭐ */}
+                <th scope="col" style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -210,6 +234,16 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
                         <span className="point" aria-hidden="true" />
                         {libelleStatut(espace.statut)}
                       </span>
+                    </td>
+                    {/* ⭐ BOUTON DÉTAILS ⭐ */}
+                    <td style={{ textAlign: 'right' }}>
+                      <button 
+                        type="button" 
+                        className="bouton-ligne" 
+                        onClick={() => voirDetails(espace.id)} 
+                      >
+                        Voir la fiche
+                      </button>
                     </td>
                   </tr>
                 );

@@ -53,10 +53,11 @@
 }
 
 
-.liste-espaces .col-code { width: 15%; }
-.liste-espaces .col-nom { width: 35%; }
-.liste-espaces .col-type { width: 30%; }
-.liste-espaces .col-statut { width: 20%; }
+.liste-espaces .col-code { width: 10%; } /* Réduit pour faire de la place */
+.liste-espaces .col-nom { width: 30%; }
+.liste-espaces .col-type { width: 25%; }
+.liste-espaces .col-statut { width: 15%; }
+/* La colonne Actions prendra les 20% restants automatiquement */
 
 
 .liste-espaces .table-espaces th {
