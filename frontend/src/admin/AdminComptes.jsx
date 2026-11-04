@@ -84,6 +84,11 @@ export default function AdminComptes({ emailConnecte }) {
     setActualisationEspaces((valeur) => valeur + 1);
   }
 
+  function ouvrirModificationEspace(espace) {
+    setEspaceEnModification(espace);
+    setPanneau('modifier-espace');
+  }
+
   async function ouvrirModification(compte) {
     try {
       const response = await fetch(`/api/admin/comptes/${compte.id}`);
@@ -93,10 +98,6 @@ export default function AdminComptes({ emailConnecte }) {
         return;
       }
 
-      function ouvrirModificationEspace(espace) {
-        setEspaceEnModification(espace);
-        setPanneau('modifier-espace');
-      }
       setEnModification(data);
       setPanneau('modifier');
     } catch (error) {
