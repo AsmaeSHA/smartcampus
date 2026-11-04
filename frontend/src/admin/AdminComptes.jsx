@@ -29,7 +29,10 @@ export default function AdminComptes({ emailConnecte }) {
   const [enModification, setEnModification] = useState(null);
   const [espaceEnModification, setEspaceEnModification] = useState(null);
   const [actualisationEspaces, setActualisationEspaces] = useState(0);
-  const [ongletActif, setOngletActif] = useState('comptes'); // 'comptes' ou 'espaces'
+  // const [ongletActif, setOngletActif] = useState('comptes'); // 'comptes' ou 'espaces'
+  const [ongletActif, setOngletActif] = useState(() =>
+  new URLSearchParams(window.location.search).get('onglet') === 'espaces' ? 'espaces' : 'comptes'
+);
 
   const charger = useCallback(async () => {
     setChargement(true);
@@ -65,6 +68,11 @@ export default function AdminComptes({ emailConnecte }) {
     setEnModification(null);
     setEspaceEnModification(null);
   }
+
+  function changerOnglet(valeur) {
+  setOngletActif(valeur);
+  window.history.replaceState({}, '', `/accueil?onglet=${valeur}`);
+}
 
   function compteCree(resultat) {
     setDernierReinitialise(null);
@@ -182,13 +190,13 @@ export default function AdminComptes({ emailConnecte }) {
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <button 
             className={ongletActif === 'comptes' ? 'bouton-menthe' : 'bouton-clair'} 
-            onClick={() => setOngletActif('comptes')}
+            onClick={() => changerOnglet('comptes')}
           >
             Gérer les comptes
           </button>
           <button 
             className={ongletActif === 'espaces' ? 'bouton-menthe' : 'bouton-clair'} 
-            onClick={() => setOngletActif('espaces')}
+            onClick={() => changerOnglet('espaces')}
           >
             Gérer les espaces
           </button>

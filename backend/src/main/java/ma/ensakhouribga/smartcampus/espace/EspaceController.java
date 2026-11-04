@@ -55,11 +55,6 @@ public class EspaceController {
         return ResponseEntity.ok(espaceService.trouverParId(id));
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<String> tester() {
-        return ResponseEntity.ok("EspaceController fonctionne !");
-    }
-
     @PutMapping("/{id}")
     public EspaceResume modifier(@PathVariable Long id, @Valid @RequestBody CreerEspaceRequest demande) {
         return espaceService.modifier(id, demande);

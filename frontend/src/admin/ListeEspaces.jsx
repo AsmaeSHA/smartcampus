@@ -17,12 +17,6 @@ const LIBELLES_STATUT = {
   ARCHIVEE: 'Archivée',
 };
 
-// function normaliser(texte) {
-//   return (texte || '')
-//     .normalize('NFD')
-//     .replace(/\p{M}/gu, '')
-//     .toLowerCase();
-// }
 
 function normaliser(texte) {
   return (texte || '')
@@ -107,16 +101,6 @@ export default function ListeEspaces({ onNonConnecte, rechargement = 0 }) {
     setType('tous');
   }
 
-  // ⭐ FONCTION POUR ALLER VERS LES DÉTAILS ⭐
-  //   function voirDetails(id) {
-  //   console.log("ID cliqué :", id); // Pour tester
-  //   if (!id) {
-  //     alert("Erreur : l'ID de l'espace est introuvable.");
-  //     return;
-  //   }
-  //   window.history.pushState({}, '', `/espaces/${id}`);
-  //   window.dispatchEvent(new PopStateEvent('popstate'));
-  // }
 
 function voirDetails(id) {
   if (!id) {
@@ -124,7 +108,6 @@ function voirDetails(id) {
     return;
   }
 
-  console.log("Je vais vers l'espace :", id);
 
   window.history.pushState({}, '', `/espaces/${id}`);
   window.dispatchEvent(new PopStateEvent('popstate'));
@@ -235,7 +218,7 @@ function voirDetails(id) {
                         {libelleStatut(espace.statut)}
                       </span>
                     </td>
-                    {/* ⭐ BOUTON DÉTAILS ⭐ */}
+                    {/* BOUTON DÉTAILS */}
                     <td style={{ textAlign: 'right' }}>
                       <button 
                         type="button" 
