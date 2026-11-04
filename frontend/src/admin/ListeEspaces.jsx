@@ -9,7 +9,7 @@ const LIBELLES_TYPE = {
   BUVETTE: 'Buvette',
 };
 
-export default function ListeEspaces({ onModifier, actualisation }) {
+export default function ListeEspaces({ onModifier, onArchive, actualisation, archivageId }) {
   const [espaces, setEspaces] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
@@ -38,10 +38,6 @@ export default function ListeEspaces({ onModifier, actualisation }) {
     return () => { active = false; };
   }, [actualisation]);
 
-  function espaceModifie(espace) {
-    setEspaces((liste) => liste.map((element) => element.id === espace.id ? espace : element));
-  }
-
   return (
     <section className="liste-comptes" aria-label="Liste des espaces">
       <h2>Espaces</h2>
@@ -63,6 +59,12 @@ export default function ListeEspaces({ onModifier, actualisation }) {
                   <td>{espace.statut}</td>
                   <td className="actions">
                     <button type="button" className="bouton-ligne" onClick={() => onModifier(espace)}>Modifier</button>
+                    {espace.statut === 'ACTIVE' && (
+                      <button type="button" className="bouton-ligne danger" disabled={archivageId === espace.id}
+                        onClick={() => onArchive(espace)}>
+                        {archivageId === espace.id ? 'Archivage…' : 'Archiver'}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -35,7 +35,7 @@ public class EspaceService {
 
     @Transactional(readOnly = true)
     public List<EspaceResume> lister() {
-        return espaces.findAll(Sort.by("code")).stream()
+        return espaces.findByStatut(StatutEspace.ACTIVE, Sort.by("code")).stream()
                 .map(EspaceResume::depuis)
                 .toList();
     }
@@ -59,6 +59,17 @@ public class EspaceService {
             }
             throw exception;
         }
+    }
+
+    @Transactional
+    public EspaceResume archiver(Long id) {
+        Espace espace = espaces.findById(id)
+                .orElseThrow(() -> new EspaceIntrouvableException("Cet espace n'existe pas"));
+        if (espace.getStatut() == StatutEspace.ARCHIVE) {
+            return EspaceResume.depuis(espace);
+        }
+        espace.archiver();
+        return EspaceResume.depuis(espaces.saveAndFlush(espace));
     }
 
     private boolean contrainteCodeVioliee(DataIntegrityViolationException exception) {

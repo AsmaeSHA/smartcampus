@@ -3,6 +3,8 @@ package ma.ensakhouribga.smartcampus.espace;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -207,6 +209,66 @@ class EspaceAdminIntegrationTest {
                         .contentType("application/json")
                         .content("{\"code\":\"S205\",\"nom\":\"Premier modifié\",\"typeEspace\":\"TERRAIN\"}"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void administrateurArchiveUnEspaceSansLeSupprimer() throws Exception {
+        Espace espace = espaces.saveAndFlush(new Espace("S207", "Salle à archiver", TypeEspace.SALLE_COURS));
+        Long id = espace.getId();
+        LocalDateTime creeLe = espace.getCreeLe();
+        LocalDateTime modifieLe = espace.getModifieLe();
+
+        mvc.perform(patch("/api/espaces/" + id + "/archiver").session(connecter(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.statut").value("ARCHIVE"));
+
+        Espace archive = espaces.findById(id).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(StatutEspace.ARCHIVE, archive.getStatut());
+        org.junit.jupiter.api.Assertions.assertEquals(creeLe.withNano((creeLe.getNano() / 1_000_000) * 1_000_000),
+                archive.getCreeLe().withNano((archive.getCreeLe().getNano() / 1_000_000) * 1_000_000));
+        org.junit.jupiter.api.Assertions.assertTrue(archive.getModifieLe().isAfter(modifieLe));
+    }
+
+    @Test
+    void archivageEstRefusePourEtudiantEnseignantEtNonAuthentifie() throws Exception {
+        Espace espace = espaces.saveAndFlush(new Espace("S208", "Salle", TypeEspace.TERRAIN));
+        String chemin = "/api/espaces/" + espace.getId() + "/archiver";
+        mvc.perform(patch(chemin).session(connecter(ETUDIANT))).andExpect(status().isForbidden());
+        mvc.perform(patch(chemin).session(connecter(ENSEIGNANT))).andExpect(status().isForbidden());
+        mvc.perform(patch(chemin)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void espaceInexistantEtDejaArchiveSontGeresProprement() throws Exception {
+        mvc.perform(patch("/api/espaces/99999/archiver").session(connecter(ADMIN)))
+                .andExpect(status().isNotFound());
+
+        Espace espace = espaces.saveAndFlush(new Espace("S209", "Salle", TypeEspace.TERRAIN));
+        mvc.perform(patch("/api/espaces/" + espace.getId() + "/archiver").session(connecter(ADMIN)))
+                .andExpect(status().isOk());
+        LocalDateTime modifieLe = espaces.findById(espace.getId()).orElseThrow().getModifieLe();
+        mvc.perform(patch("/api/espaces/" + espace.getId() + "/archiver").session(connecter(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut").value("ARCHIVE"));
+        org.junit.jupiter.api.Assertions.assertEquals(modifieLe,
+                espaces.findById(espace.getId()).orElseThrow().getModifieLe());
+    }
+
+    @Test
+    void espaceArchiveEstExcluDeLaListeNormale() throws Exception {
+        Espace actif = espaces.saveAndFlush(new Espace("S210", "Active", TypeEspace.TERRAIN));
+        Espace archive = espaces.saveAndFlush(new Espace("S211", "Archive", TypeEspace.TERRAIN));
+        archive.archiver();
+        espaces.saveAndFlush(archive);
+
+        mvc.perform(get("/api/espaces").session(connecter(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].code").value(org.hamcrest.Matchers.hasItem("S210")))
+                .andExpect(jsonPath("$[*].code").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("S211"))));
+        org.junit.jupiter.api.Assertions.assertTrue(espaces.findById(archive.getId()).isPresent());
+        org.junit.jupiter.api.Assertions.assertEquals(StatutEspace.ACTIVE,
+                espaces.findById(actif.getId()).orElseThrow().getStatut());
     }
 
     private MockHttpSession connecter(String email) throws Exception {

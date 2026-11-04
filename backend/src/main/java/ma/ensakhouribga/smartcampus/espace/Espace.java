@@ -57,6 +57,12 @@ public class Espace {
         this.typeEspace = typeEspace;
     }
 
+    public void archiver() {
+        if (statut == StatutEspace.ACTIVE) {
+            statut = StatutEspace.ARCHIVE;
+        }
+    }
+
     @PrePersist
     void avantCreation() {
         LocalDateTime maintenant = LocalDateTime.now();

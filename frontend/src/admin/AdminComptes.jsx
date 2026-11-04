@@ -29,6 +29,7 @@ export default function AdminComptes({ emailConnecte }) {
   const [enModification, setEnModification] = useState(null);
   const [espaceEnModification, setEspaceEnModification] = useState(null);
   const [actualisationEspaces, setActualisationEspaces] = useState(0);
+  const [archivageId, setArchivageId] = useState(null);
 
   const charger = useCallback(async () => {
     setChargement(true);
@@ -84,9 +85,35 @@ export default function AdminComptes({ emailConnecte }) {
     setActualisationEspaces((valeur) => valeur + 1);
   }
 
+  function espaceArchive(espace) {
+    setMessage(`L’espace ${espace.code} a été archivé.`);
+    setActualisationEspaces((valeur) => valeur + 1);
+  }
+
   function ouvrirModificationEspace(espace) {
     setEspaceEnModification(espace);
     setPanneau('modifier-espace');
+  }
+
+  async function archiverEspace(espace) {
+    if (!window.confirm(`Archiver l’espace ${espace.code} ? Il ne sera plus proposé à la réservation.`)) {
+      return;
+    }
+    setArchivageId(espace.id);
+    try {
+      const response = await fetch(`/api/espaces/${espace.id}/archiver`, { method: 'PATCH' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setErreur(data.message || 'Archivage impossible. Réessayez plus tard.');
+        return;
+      }
+      setErreur('');
+      espaceArchive(data);
+    } catch (error) {
+      setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
+    } finally {
+      setArchivageId(null);
+    }
   }
 
   async function ouvrirModification(compte) {
@@ -205,7 +232,8 @@ export default function AdminComptes({ emailConnecte }) {
           emailConnecte={emailConnecte} onModifier={ouvrirModification}
           onChangerActivation={changerActivation} onReinitialiserMotDePasse={reinitialiserMotDePasse}
           onEffacerRole={() => setFiltreRole('TOUS')} />
-        <ListeEspaces onModifier={ouvrirModificationEspace} actualisation={actualisationEspaces} />
+        <ListeEspaces onModifier={ouvrirModificationEspace} onArchive={archiverEspace}
+          actualisation={actualisationEspaces} archivageId={archivageId} />
       </div>
 
       {panneau && (

@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,6 +41,11 @@ public class EspaceController {
     @PutMapping("/{id}")
     public EspaceResume modifier(@PathVariable Long id, @Valid @RequestBody CreerEspaceRequest demande) {
         return espaceService.modifier(id, demande);
+    }
+
+    @PatchMapping("/{id}/archiver")
+    public EspaceResume archiver(@PathVariable Long id) {
+        return espaceService.archiver(id);
     }
 
     @ExceptionHandler(EspaceExistantException.class)
