@@ -5,6 +5,7 @@ import ma.ensakhouribga.smartcampus.user.User;
 import ma.ensakhouribga.smartcampus.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 @Service
 public class NotificationService {
@@ -47,5 +48,11 @@ public class NotificationService {
         }
         notification.marquerLue();
         return NotificationResume.depuis(notification);
+    }
+
+        /** R14 : supprime les notifications lues créées il y a plus de 30 jours. Les non lues sont gardées. */
+    @Transactional
+    public long purgerLuesAnciennes(LocalDateTime maintenant) {
+        return notifications.deleteByLueTrueAndCreeLeBefore(maintenant.minusDays(30));
     }
 }
