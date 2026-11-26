@@ -15,6 +15,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +50,20 @@ public class SignalementController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(signalementService.mesSignalements(utilisateur.get()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SignalementDetail> detail(@PathVariable Long id, HttpServletRequest request) {
+        Optional<User> utilisateur = utilisateurCourant.depuis(request);
+        if (utilisateur.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(signalementService.detail(id, utilisateur.get()));
+    }
+
+    @ExceptionHandler(SignalementIntrouvableException.class)
+    ResponseEntity<Map<String, String>> introuvable(SignalementIntrouvableException exception) {
+        return erreur(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
     @ExceptionHandler(SignalementInterditException.class)

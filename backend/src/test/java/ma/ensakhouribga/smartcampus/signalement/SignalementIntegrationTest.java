@@ -2,6 +2,7 @@ package ma.ensakhouribga.smartcampus.signalement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,6 +16,7 @@ import ma.ensakhouribga.smartcampus.espace.Espace;
 import ma.ensakhouribga.smartcampus.espace.EspaceRepository;
 import ma.ensakhouribga.smartcampus.espace.TypeEspace;
 import ma.ensakhouribga.smartcampus.evenement.SignalementCreeEvent;
+import ma.ensakhouribga.smartcampus.evenement.SignalementStatutChangeEvent;
 import ma.ensakhouribga.smartcampus.user.Enseignant;
 import ma.ensakhouribga.smartcampus.user.Role;
 import ma.ensakhouribga.smartcampus.user.User;
@@ -76,10 +78,16 @@ class SignalementIntegrationTest {
     /** Garde les événements publiés pour vérifier que l'administrateur pourra être notifié. */
     static class EvenementsRecus {
         final List<SignalementCreeEvent> recus = new ArrayList<>();
+        final List<SignalementStatutChangeEvent> statuts = new ArrayList<>();
 
         @EventListener
         public void recevoir(SignalementCreeEvent evenement) {
             recus.add(evenement);
+        }
+
+        @EventListener
+        public void recevoirStatut(SignalementStatutChangeEvent evenement) {
+            statuts.add(evenement);
         }
     }
 
@@ -99,6 +107,7 @@ class SignalementIntegrationTest {
         salle = espaces.findByCode("SIG1").orElseGet(() ->
                 espaces.save(new Espace("SIG1", "Salle TD signalement", TypeEspace.SALLE_COURS)));
         evenementsRecus.recus.clear();
+        evenementsRecus.statuts.clear();
     }
 
     @Test
@@ -239,6 +248,107 @@ class SignalementIntegrationTest {
                         .contentType("application/json")
                         .content(corps(archive.getId(), "AUTRE", "Titre", "Description")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void administrateurTraiteUnSignalementJusquALaFermeture() throws Exception {
+        Signalement signalement = nouveauSignalement("SIG-TRAITE");
+        String url = "/api/admin/signalements/" + signalement.getId();
+        MockHttpSession admin = connecter(ADMIN);
+
+        mvc.perform(patch(url + "/statut").session(admin).contentType("application/json")
+                        .content("{\"statut\":\"EN_COURS\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalement.statut").value("EN_COURS"))
+                .andExpect(jsonPath("$.traitePar").value("Admin Signalement"));
+
+        mvc.perform(post(url + "/commentaires").session(admin).contentType("application/json")
+                        .content("{\"contenu\":\"Technicien prévu demain\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.commentaires[0].contenu").value("Technicien prévu demain"))
+                .andExpect(jsonPath("$.commentaires[0].auteur").value("Admin Signalement"));
+
+        mvc.perform(patch(url + "/statut").session(admin).contentType("application/json")
+                        .content("{\"statut\":\"RESOLU\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(patch(url + "/statut").session(admin).contentType("application/json")
+                        .content("{\"statut\":\"FERME\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalement.statut").value("FERME"))
+                .andExpect(jsonPath("$.signalement.fermeLe").isNotEmpty())
+                .andExpect(jsonPath("$.statutsPossibles", hasSize(0)));
+
+        assertThat(evenementsRecus.statuts).extracting(SignalementStatutChangeEvent::statut)
+                .containsExactly("EN_COURS", "RESOLU", "FERME");
+    }
+
+    @Test
+    void unSignalementFermeNeChangePlus() throws Exception {
+        Signalement signalement = nouveauSignalement("SIG-FERME");
+        String url = "/api/admin/signalements/" + signalement.getId();
+        MockHttpSession admin = connecter(ADMIN);
+
+        mvc.perform(patch(url + "/statut").session(admin).contentType("application/json")
+                        .content("{\"statut\":\"FERME\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(patch(url + "/statut").session(admin).contentType("application/json")
+                        .content("{\"statut\":\"EN_COURS\"}"))
+                .andExpect(status().isConflict());
+        mvc.perform(post(url + "/commentaires").session(admin).contentType("application/json")
+                        .content("{\"contenu\":\"Trop tard\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void onNeSautePasDEtape() throws Exception {
+        Signalement signalement = nouveauSignalement("SIG-SAUT");
+        mvc.perform(patch("/api/admin/signalements/" + signalement.getId() + "/statut").session(connecter(ADMIN))
+                        .contentType("application/json").content("{\"statut\":\"RESOLU\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void lAuteurVoitLeSuiviMaisPasLesAutres() throws Exception {
+        Signalement signalement = nouveauSignalement("SIG-SUIVI");
+        mvc.perform(post("/api/admin/signalements/" + signalement.getId() + "/commentaires")
+                        .session(connecter(ADMIN)).contentType("application/json")
+                        .content("{\"contenu\":\"Pris en charge\"}"))
+                .andExpect(status().isCreated());
+
+        mvc.perform(get("/api/signalements/" + signalement.getId()).session(connecter(ETUDIANT)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalement.titre").value("Lampe"))
+                .andExpect(jsonPath("$.commentaires", hasSize(1)));
+
+        mvc.perform(get("/api/signalements/" + signalement.getId()).session(connecter(ENSEIGNANT)))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/signalements/999999").session(connecter(ETUDIANT)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void etudiantNePeutPasTraiter() throws Exception {
+        Signalement signalement = nouveauSignalement("SIG-INTERDIT");
+        mvc.perform(patch("/api/admin/signalements/" + signalement.getId() + "/statut").session(connecter(ETUDIANT))
+                        .contentType("application/json").content("{\"statut\":\"EN_COURS\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void commentaireVideRenvoie400() throws Exception {
+        Signalement signalement = nouveauSignalement("SIG-VIDE");
+        mvc.perform(post("/api/admin/signalements/" + signalement.getId() + "/commentaires")
+                        .session(connecter(ADMIN)).contentType("application/json")
+                        .content("{\"contenu\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.champ").value("contenu"));
+    }
+
+    /** Un signalement OUVERT créé par l'étudiant, dans un espace propre au test. */
+    private Signalement nouveauSignalement(String codeEspace) {
+        User etudiant = users.findByEmail(ETUDIANT).orElseThrow();
+        Espace espace = espaces.save(new Espace(codeEspace, "Salle " + codeEspace, TypeEspace.SALLE_COURS));
+        return signalements.save(new Signalement(espace, etudiant, CategorieSignalement.MATERIEL, "Lampe", "Lampe grillée"));
     }
 
     private String corps(Long espaceId, String categorie, String titre, String description) {

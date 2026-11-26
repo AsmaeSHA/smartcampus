@@ -6,6 +6,7 @@ import ma.ensakhouribga.smartcampus.espace.EspaceIntrouvableException;
 import ma.ensakhouribga.smartcampus.espace.EspaceRepository;
 import ma.ensakhouribga.smartcampus.espace.StatutEspace;
 import ma.ensakhouribga.smartcampus.evenement.SignalementCreeEvent;
+import ma.ensakhouribga.smartcampus.evenement.SignalementStatutChangeEvent;
 import ma.ensakhouribga.smartcampus.user.Role;
 import ma.ensakhouribga.smartcampus.user.User;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,12 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class SignalementService {
 
     private final SignalementRepository signalements;
+    private final CommentaireSignalementRepository commentaires;
     private final EspaceRepository espaces;
     private final ApplicationEventPublisher evenements;
 
-    public SignalementService(SignalementRepository signalements, EspaceRepository espaces,
-                              ApplicationEventPublisher evenements) {
+    public SignalementService(SignalementRepository signalements, CommentaireSignalementRepository commentaires,
+                              EspaceRepository espaces, ApplicationEventPublisher evenements) {
         this.signalements = signalements;
+        this.commentaires = commentaires;
         this.espaces = espaces;
         this.evenements = evenements;
     }
@@ -61,5 +64,52 @@ public class SignalementService {
         return signalements.rechercher(statut, categorie, espaceId).stream()
                 .map(SignalementResume::depuis)
                 .toList();
+    }
+
+    /** Détail et fil de suivi : visible par l'administrateur et par l'auteur du signalement seulement. */
+    @Transactional(readOnly = true)
+    public SignalementDetail detail(Long id, User utilisateur) {
+        Signalement signalement = trouver(id);
+        if (!utilisateur.estAdministrateur() && !signalement.estAuteur(utilisateur.getId())) {
+            throw new SignalementInterditException("Ce signalement ne vous appartient pas");
+        }
+        return detailDe(signalement);
+    }
+
+    /** L'administrateur change le statut ; l'auteur sera notifié au sprint 4 (EN_COURS ou RESOLU). */
+    @Transactional
+    public SignalementDetail changerStatut(Long id, StatutSignalement nouveau, User administrateur) {
+        Signalement signalement = trouver(id);
+        signalement.changerStatut(nouveau, administrateur);
+        signalements.saveAndFlush(signalement);
+        evenements.publishEvent(new SignalementStatutChangeEvent(signalement.getId(),
+                signalement.getSignalePar().getId(), signalement.getEspace().getNom(), nouveau.name()));
+        return detailDe(signalement);
+    }
+
+    /** L'administrateur ajoute un commentaire de suivi, sauf sur un signalement fermé. */
+    @Transactional
+    public SignalementDetail commenter(Long id, String contenu, User administrateur) {
+        Signalement signalement = trouver(id);
+        if (signalement.estFerme()) {
+            throw new TransitionSignalementException("Ce signalement est fermé : on ne peut plus le commenter");
+        }
+        commentaires.save(new CommentaireSignalement(signalement, administrateur, contenu.trim()));
+        return detailDe(signalement);
+    }
+
+    private Signalement trouver(Long id) {
+        return signalements.findById(id).orElseThrow(SignalementIntrouvableException::new);
+    }
+
+    private SignalementDetail detailDe(Signalement signalement) {
+        User traitePar = signalement.getTraitePar();
+        return new SignalementDetail(
+                SignalementResume.depuis(signalement),
+                traitePar == null ? null : traitePar.getPrenom() + " " + traitePar.getNom(),
+                signalement.statutsPossibles(),
+                commentaires.findBySignalementIdOrderByCreeLeAsc(signalement.getId()).stream()
+                        .map(CommentaireResume::depuis)
+                        .toList());
     }
 }
