@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import ma.ensakhouribga.smartcampus.user.Role;
 import ma.ensakhouribga.smartcampus.user.Enseignant;
@@ -206,6 +207,14 @@ class EspaceAdminIntegrationTest {
         mvc.perform(put("/api/espaces/" + premier.getId()).session(connecter(ADMIN))
                         .contentType("application/json")
                         .content("{\"code\":\"S205\",\"nom\":\"Premier modifié\",\"typeEspace\":\"TERRAIN\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void unEtudiantEtUnEnseignantPeuventConsulterLesEspaces() throws Exception {
+        mvc.perform(get("/api/espaces").session(connecter(ETUDIANT)))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/espaces").session(connecter(ENSEIGNANT)))
                 .andExpect(status().isOk());
     }
 
