@@ -1,3 +1,4 @@
+
 package ma.ensakhouribga.smartcampus.espace;
 
 import static org.hamcrest.Matchers.containsString;
@@ -225,7 +226,8 @@ class EspaceAdminIntegrationTest {
 
         Espace archive = espaces.findById(id).orElseThrow();
         org.junit.jupiter.api.Assertions.assertEquals(StatutEspace.ARCHIVE, archive.getStatut());
-        org.junit.jupiter.api.Assertions.assertEquals(creeLe.withNano((creeLe.getNano() / 1_000_000) * 1_000_000),
+        org.junit.jupiter.api.Assertions.assertEquals(
+                creeLe.withNano((creeLe.getNano() / 1_000_000) * 1_000_000),
                 archive.getCreeLe().withNano((archive.getCreeLe().getNano() / 1_000_000) * 1_000_000));
         org.junit.jupiter.api.Assertions.assertTrue(archive.getModifieLe().isAfter(modifieLe));
     }
@@ -234,9 +236,13 @@ class EspaceAdminIntegrationTest {
     void archivageEstRefusePourEtudiantEnseignantEtNonAuthentifie() throws Exception {
         Espace espace = espaces.saveAndFlush(new Espace("S208", "Salle", TypeEspace.TERRAIN));
         String chemin = "/api/espaces/" + espace.getId() + "/archiver";
-        mvc.perform(patch(chemin).session(connecter(ETUDIANT))).andExpect(status().isForbidden());
-        mvc.perform(patch(chemin).session(connecter(ENSEIGNANT))).andExpect(status().isForbidden());
-        mvc.perform(patch(chemin)).andExpect(status().isUnauthorized());
+
+        mvc.perform(patch(chemin).session(connecter(ETUDIANT)))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch(chemin).session(connecter(ENSEIGNANT)))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch(chemin))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -247,12 +253,15 @@ class EspaceAdminIntegrationTest {
         Espace espace = espaces.saveAndFlush(new Espace("S209", "Salle", TypeEspace.TERRAIN));
         mvc.perform(patch("/api/espaces/" + espace.getId() + "/archiver").session(connecter(ADMIN)))
                 .andExpect(status().isOk());
+
         LocalDateTime modifieLe = espaces.findById(espace.getId()).orElseThrow().getModifieLe();
+
         mvc.perform(patch("/api/espaces/" + espace.getId() + "/archiver").session(connecter(ADMIN)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statut").value("ARCHIVE"));
-        org.junit.jupiter.api.Assertions.assertEquals(modifieLe,
-                espaces.findById(espace.getId()).orElseThrow().getModifieLe());
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+                modifieLe, espaces.findById(espace.getId()).orElseThrow().getModifieLe());
     }
 
     @Test
@@ -265,10 +274,21 @@ class EspaceAdminIntegrationTest {
         mvc.perform(get("/api/espaces").session(connecter(ADMIN)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].code").value(org.hamcrest.Matchers.hasItem("S210")))
-                .andExpect(jsonPath("$[*].code").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("S211"))));
+                .andExpect(jsonPath("$[*].code").value(
+                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("S211"))));
+
         org.junit.jupiter.api.Assertions.assertTrue(espaces.findById(archive.getId()).isPresent());
-        org.junit.jupiter.api.Assertions.assertEquals(StatutEspace.ACTIVE,
-                espaces.findById(actif.getId()).orElseThrow().getStatut());
+        org.junit.jupiter.api.Assertions.assertEquals(
+                StatutEspace.ACTIVE, espaces.findById(actif.getId()).orElseThrow().getStatut());
+    }
+
+    @Test
+    void unEtudiantEtUnEnseignantPeuventConsulterLesEspaces() throws Exception {
+        mvc.perform(get("/api/espaces").session(connecter(ETUDIANT)))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/espaces").session(connecter(ENSEIGNANT)))
+                .andExpect(status().isOk());
     }
 
     private MockHttpSession connecter(String email) throws Exception {
