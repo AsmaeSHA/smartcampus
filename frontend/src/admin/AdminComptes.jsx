@@ -7,6 +7,7 @@ import ListeEspaces from './ListeEspaces.jsx';
 import ImportComptes from './ImportComptes.jsx';
 import ListeComptes from './ListeComptes.jsx';
 import Panneau from './Panneau.jsx';
+import ListeSignalementsAdmin from '../signalements/ListeSignalementsAdmin.jsx';
 import './admin.css';
 
 const TUILES = [
@@ -32,11 +33,10 @@ export default function AdminComptes({ emailConnecte }) {
   const [actualisationEspaces, setActualisationEspaces] = useState(0);
   const [archivageId, setArchivageId] = useState(null);
 
-  const [ongletActif, setOngletActif] = useState(() =>
-    new URLSearchParams(window.location.search).get('onglet') === 'comptes'
-      ? 'comptes'
-      : 'espaces'
-  );
+  const [ongletActif, setOngletActif] = useState(() => {
+    const onglet = new URLSearchParams(window.location.search).get('onglet');
+    return onglet === 'comptes' || onglet === 'signalements' ? onglet : 'espaces';
+  });
 
   const charger = useCallback(async () => {
     setChargement(true);
@@ -286,7 +286,7 @@ export default function AdminComptes({ emailConnecte }) {
                   Nouveau compte
                 </button>
               </>
-            ) : (
+            ) : ongletActif === 'espaces' ? (
               <button
                 type="button"
                 className="bouton-menthe"
@@ -294,7 +294,7 @@ export default function AdminComptes({ emailConnecte }) {
               >
                 Créer un espace
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </section>
@@ -315,6 +315,14 @@ export default function AdminComptes({ emailConnecte }) {
             onClick={() => changerOnglet('espaces')}
           >
             Gérer les espaces
+          </button>
+
+          <button
+            type="button"
+            className={ongletActif === 'signalements' ? 'bouton-menthe' : 'bouton-clair'}
+            onClick={() => changerOnglet('signalements')}
+          >
+            Signalements
           </button>
         </div>
 
@@ -398,6 +406,8 @@ export default function AdminComptes({ emailConnecte }) {
             />
           </>
         )}
+
+        {ongletActif === 'signalements' && <ListeSignalementsAdmin />}
 
         {ongletActif === 'espaces' && (
           <div

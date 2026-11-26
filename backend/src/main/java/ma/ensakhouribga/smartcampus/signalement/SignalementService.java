@@ -1,8 +1,10 @@
 package ma.ensakhouribga.smartcampus.signalement;
 
+import java.util.List;
 import ma.ensakhouribga.smartcampus.espace.Espace;
 import ma.ensakhouribga.smartcampus.espace.EspaceIntrouvableException;
 import ma.ensakhouribga.smartcampus.espace.EspaceRepository;
+import ma.ensakhouribga.smartcampus.espace.StatutEspace;
 import ma.ensakhouribga.smartcampus.evenement.SignalementCreeEvent;
 import ma.ensakhouribga.smartcampus.user.Role;
 import ma.ensakhouribga.smartcampus.user.User;
@@ -35,11 +37,29 @@ public class SignalementService {
         }
         Espace espace = espaces.findById(demande.espaceId())
                 .orElseThrow(() -> new EspaceIntrouvableException("Cet espace n'existe pas"));
-        // À ajouter quand SC-18 sera mergé : refuser un espace archivé.
+        if (espace.getStatut() == StatutEspace.ARCHIVE) {
+            throw new EspaceIntrouvableException("Cet espace est archivé");
+        }
 
         Signalement signalement = signalements.save(new Signalement(espace, auteur, demande.categorie(),
                 demande.titre().trim(), demande.description().trim()));
         evenements.publishEvent(new SignalementCreeEvent(signalement.getId(), espace.getNom()));
         return SignalementResume.depuis(signalement);
+    }
+
+    /** Les signalements de l'utilisateur connecté, les plus récents en premier. */
+    @Transactional(readOnly = true)
+    public List<SignalementResume> mesSignalements(User utilisateur) {
+        return signalements.findBySignaleParIdOrderByCreeLeDesc(utilisateur.getId()).stream()
+                .map(SignalementResume::depuis)
+                .toList();
+    }
+
+    /** Tous les signalements pour l'administrateur, avec des filtres facultatifs et combinables. */
+    @Transactional(readOnly = true)
+    public List<SignalementResume> rechercher(StatutSignalement statut, CategorieSignalement categorie, Long espaceId) {
+        return signalements.rechercher(statut, categorie, espaceId).stream()
+                .map(SignalementResume::depuis)
+                .toList();
     }
 }
