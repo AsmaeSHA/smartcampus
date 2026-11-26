@@ -35,3 +35,62 @@
   width: auto;
   padding-inline: 1.2rem;
 }
+
+/* Listes de signalements (« Mes signalements » et onglet admin) */
+.liste-signalements table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.liste-signalements th,
+.liste-signalements td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e3e8e5;
+  text-align: left;
+  vertical-align: top;
+}
+
+.liste-signalements th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5b6b63;
+}
+
+.description-courte {
+  display: block;
+  margin-top: 2px;
+  color: #5b6b63;
+  font-size: 0.85rem;
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filtres-signalements {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.filtres-signalements .field {
+  min-width: 170px;
+  margin: 0;
+}
+
+.statut-signalement {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statut-ouvert { background: #fdecea; color: #a8281e; }
+.statut-en_cours { background: #fff4dc; color: #8a5a00; }
+.statut-resolu { background: #e1f5ea; color: #116b45; }
+.statut-ferme { background: #eceff1; color: #4a5560; }

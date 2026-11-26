@@ -43,6 +43,16 @@ export default function AccueilEnseignant({ utilisateur, onChangerMotDePasse }) 
               >
                 Consulter les espaces
               </button>
+            <button
+                type="button"
+                className="action"
+                onClick={() => {
+                  window.history.pushState({}, '', '/signalements');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+              >
+                Mes signalements
+              </button>
           </aside>
         </section>
         <footer className="role-footer">SmartCampus <span>·</span> Votre campus, au même endroit.</footer>

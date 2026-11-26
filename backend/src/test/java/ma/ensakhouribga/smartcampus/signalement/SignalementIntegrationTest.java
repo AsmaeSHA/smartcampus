@@ -1,9 +1,13 @@
 package ma.ensakhouribga.smartcampus.signalement;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -161,6 +165,79 @@ class SignalementIntegrationTest {
         mvc.perform(post("/api/signalements").session(connecter(ETUDIANT))
                         .contentType("application/json")
                         .content(corps(999999L, "AUTRE", "Titre", "Description")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void chacunNeVoitQueSesSignalements() throws Exception {
+        User etudiant = users.findByEmail(ETUDIANT).orElseThrow();
+        User enseignant = users.findByEmail(ENSEIGNANT).orElseThrow();
+        Espace espace = espaces.save(new Espace("SIG-MINE", "Salle mes signalements", TypeEspace.SALLE_COURS));
+        signalements.save(new Signalement(espace, etudiant, CategorieSignalement.PROPRETE, "Sol sale", "Sol sale"));
+        signalements.save(new Signalement(espace, enseignant, CategorieSignalement.MATERIEL, "Tableau", "Tableau cassé"));
+
+        mvc.perform(get("/api/signalements/mine").session(connecter(ENSEIGNANT)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].auteur", everyItem(is("Enseignant Signalement"))))
+                .andExpect(jsonPath("$[?(@.titre == 'Tableau')]", hasSize(1)))
+                .andExpect(jsonPath("$[?(@.titre == 'Sol sale')]", hasSize(0)));
+    }
+
+    @Test
+    void mesSignalementsSansConnexionRenvoie401() throws Exception {
+        mvc.perform(get("/api/signalements/mine")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void administrateurFiltreParStatutCategorieEtEspace() throws Exception {
+        User etudiant = users.findByEmail(ETUDIANT).orElseThrow();
+        Espace espace = espaces.save(new Espace("SIG-FILTRE", "Salle filtre", TypeEspace.SALLE_REUNION));
+        signalements.save(new Signalement(espace, etudiant, CategorieSignalement.MATERIEL, "Chaise", "Chaise cassée"));
+        signalements.save(new Signalement(espace, etudiant, CategorieSignalement.SECURITE, "Fil", "Fil dénudé"));
+
+        mvc.perform(get("/api/admin/signalements").param("espaceId", espace.getId().toString())
+                        .session(connecter(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+
+        mvc.perform(get("/api/admin/signalements")
+                        .param("espaceId", espace.getId().toString())
+                        .param("statut", "OUVERT")
+                        .param("categorie", "SECURITE")
+                        .session(connecter(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].titre").value("Fil"))
+                .andExpect(jsonPath("$[0].auteur").value("Etudiant Signalement"));
+
+        mvc.perform(get("/api/admin/signalements")
+                        .param("espaceId", espace.getId().toString())
+                        .param("statut", "FERME")
+                        .session(connecter(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    void etudiantNAccedePasALaListeAdmin() throws Exception {
+        mvc.perform(get("/api/admin/signalements").session(connecter(ETUDIANT)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void filtreInconnuRenvoie400() throws Exception {
+        mvc.perform(get("/api/admin/signalements").param("statut", "PERDU").session(connecter(ADMIN)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void espaceArchiveNePeutPasEtreSignale() throws Exception {
+        Espace archive = new Espace("SIG-ARCH", "Salle archivée", TypeEspace.SALLE_COURS);
+        archive.archiver();
+        archive = espaces.save(archive);
+        mvc.perform(post("/api/signalements").session(connecter(ETUDIANT))
+                        .contentType("application/json")
+                        .content(corps(archive.getId(), "AUTRE", "Titre", "Description")))
                 .andExpect(status().isNotFound());
     }
 

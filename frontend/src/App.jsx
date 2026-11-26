@@ -8,6 +8,7 @@ import AccueilEtudiant from './AccueilEtudiant.jsx';
 import AccueilEnseignant from './AccueilEnseignant.jsx';
 import ListeEspaces from './admin/ListeEspaces.jsx';
 import DetailsEspace from './espaces/DetailsEspace.jsx';
+import MesSignalements from './signalements/MesSignalements.jsx';
 import Cloche from './Cloche.jsx';
 
 export default function App() {
@@ -103,6 +104,29 @@ export default function App() {
   if (utilisateur && chemin === '/espaces' && utilisateur.role === 'ADMINISTRATEUR') {
     window.history.replaceState({}, '', '/accueil?onglet=espaces');
     setChemin('/accueil');
+  }
+
+  if (utilisateur && chemin === '/signalements' && utilisateur.role === 'ADMINISTRATEUR') {
+    window.history.replaceState({}, '', '/accueil?onglet=signalements');
+    setChemin('/accueil');
+  }
+
+  // Mes signalements : étudiant et enseignant
+  if (utilisateur && chemin === '/signalements') {
+    return (
+      <div className="admin-shell">
+        <header className="admin-top">
+          <p className="brand">SmartCampus</p>
+          <div className="admin-user">
+            <button type="button" className="bouton-clair" onClick={() => naviguer('/accueil')}>Retour à l'accueil</button>
+            <LogoutButton onLogout={() => setUtilisateur(null)} />
+          </div>
+        </header>
+        <main className="admin-main">
+          <MesSignalements onNonConnecte={() => setUtilisateur(null)} />
+        </main>
+      </div>
+    );
   }
 
   // ⭐ 2. LISTE DES ESPACES ⭐
