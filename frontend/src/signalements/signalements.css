@@ -1,0 +1,37 @@
+/* Formulaire de signalement : réutilise .card, .field, .error et .succes de App.css */
+.signalement-carte {
+  margin-top: 1.2rem;
+}
+
+.signalement-carte .field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.signalement-carte .field textarea:focus {
+  outline: 2px solid var(--accent, #0f8a5f);
+  outline-offset: 1px;
+}
+
+.champ-erreur {
+  margin: 4px 0 0;
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.signalement-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.signalement-actions .submit {
+  width: auto;
+  padding-inline: 1.2rem;
+}

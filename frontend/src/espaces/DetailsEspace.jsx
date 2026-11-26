@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import './fiche-espace.css';
+import SignalerProbleme from '../signalements/SignalerProbleme.jsx';
 
 // Fiche de salle (SC-15) : code, nom, type, état, dates, et accès aux disponibilités (SC-87).
 // Même habillage que la page d'administration. Chaque type d'espace a sa couleur et son icône.
@@ -68,11 +69,12 @@ function ilYa(valeur) {
   return rtf.format(jours, 'day');
 }
 
-export default function DetailsEspace({ id, onRetour, onNonConnecte }) {
+export default function DetailsEspace({ id, onRetour, onNonConnecte, peutSignaler = false }) {
   const [espace, setEspace] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
   const [bientot, setBientot] = useState(false);
+  const [signalementOuvert, setSignalementOuvert] = useState(false);
 
   const nonConnecteRef = useRef(onNonConnecte);
   nonConnecteRef.current = onNonConnecte;
@@ -150,9 +152,16 @@ export default function DetailsEspace({ id, onRetour, onNonConnecte }) {
             <h1>Fiche de salle</h1>
             <p className="fiche-sous-titre">{espace.nom} · {espace.code}</p>
           </div>
-          <button type="button" className="bouton-menthe" onClick={() => setBientot(true)}>
-            Voir les disponibilités
-          </button>
+          <div className="fiche-hero-actions">
+            <button type="button" className="bouton-menthe" onClick={() => setBientot(true)}>
+              Voir les disponibilités
+            </button>
+            {peutSignaler && (
+              <button type="button" className="bouton-menthe" onClick={() => setSignalementOuvert(true)}>
+                Signaler un problème
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="fiche-onglets">
@@ -168,6 +177,10 @@ export default function DetailsEspace({ id, onRetour, onNonConnecte }) {
           <p className="fiche-note" role="status">
             Les disponibilités seront accessibles avec la fonctionnalité de réservation.
           </p>
+        )}
+
+        {signalementOuvert && (
+          <SignalerProbleme espace={espace} onFermer={() => setSignalementOuvert(false)} />
         )}
 
         <section className="fiche-identite" aria-label="Identité de l’espace">
