@@ -6,6 +6,9 @@ import AdminComptes from './admin/AdminComptes.jsx';
 import ChangerMotDePasse from './ChangerMotDePasse.jsx';
 import AccueilEtudiant from './AccueilEtudiant.jsx';
 import AccueilEnseignant from './AccueilEnseignant.jsx';
+import ListeEspaces from './admin/ListeEspaces.jsx';
+import DetailsEspace from './espaces/DetailsEspace.jsx';
+import Cloche from './Cloche.jsx';
 
 export default function App() {
   // undefined : vérification en cours ; null : non connecté ; objet : utilisateur connecté.
@@ -30,6 +33,15 @@ export default function App() {
     setChemin(vers);
   }
 
+    function retourAuxEspaces() {
+    if (utilisateur?.role === 'ADMINISTRATEUR') {
+      window.history.pushState({}, '', '/accueil?onglet=espaces');
+      setChemin('/accueil');
+    } else {
+      naviguer('/espaces');
+    }
+  }
+
   if (utilisateur && utilisateur.changerMotDePasse) {
     if (chemin !== '/mot-de-passe') {
       window.history.replaceState({}, '', '/mot-de-passe');
@@ -49,25 +61,7 @@ export default function App() {
 
   // L'administrateur arrive sur la gestion des comptes (SC-27).
   // Le rôle sert seulement à l'affichage : les droits sont vérifiés par le serveur (R13).
-  if (utilisateur && utilisateur.role === 'ADMINISTRATEUR') {
-    if (chemin !== '/accueil') {
-      window.history.replaceState({}, '', '/accueil');
-    }
-    return (
-      <div className="admin-shell">
-        <header className="admin-top">
-          <p className="brand">SmartCampus</p>
-          <div className="admin-user">
-            <LogoutButton onLogout={() => setUtilisateur(null)} />
-          </div>
-        </header>
-        <main className="admin-main">
-          <AdminComptes emailConnecte={utilisateur.email} />
-        </main>
-      </div>
-    );
-  }
-
+ 
   if (utilisateur && chemin === '/mot-de-passe') {
     return (
       <div className="shell">
@@ -82,6 +76,75 @@ export default function App() {
     );
   }
 
+    const correspondance = chemin.match(/^\/espaces\/(\d+)$/);
+
+  if (utilisateur && correspondance) {
+    return (
+      <div className="admin-shell">
+        <header className="admin-top">
+          <p className="brand">SmartCampus</p>
+          <div className="admin-user">
+            <LogoutButton onLogout={() => setUtilisateur(null)} />
+          </div>
+        </header>
+        <main className="admin-main">
+          <DetailsEspace
+            id={correspondance[1]}
+            onRetour={retourAuxEspaces}
+            onNonConnecte={() => setUtilisateur(null)}
+          />
+        </main>
+      </div>
+    );
+  }
+
+
+  if (utilisateur && chemin === '/espaces' && utilisateur.role === 'ADMINISTRATEUR') {
+    window.history.replaceState({}, '', '/accueil?onglet=espaces');
+    setChemin('/accueil');
+  }
+
+  // ⭐ 2. LISTE DES ESPACES ⭐
+  if (utilisateur && chemin === '/espaces') {
+    return (
+      <div className="admin-shell">
+        <header className="admin-top">
+          <p className="brand">SmartCampus</p>
+          <div className="admin-user">
+            <button type="button" className="bouton-clair" onClick={() => naviguer('/accueil')}>Retour à l'accueil</button>
+            <LogoutButton onLogout={() => setUtilisateur(null)} />
+          </div>
+        </header>
+        <main className="admin-main">
+          <ListeEspaces onNonConnecte={() => setUtilisateur(null)} />
+        </main>
+      </div>
+    );
+  }
+
+  if (utilisateur && utilisateur.role === 'ADMINISTRATEUR') {
+  if (chemin !== '/accueil') {
+    window.history.replaceState({}, '', '/accueil');
+    setChemin('/accueil');
+  }
+    return (
+      <div className="admin-shell">
+        <header className="admin-top">
+          <p className="brand">SmartCampus</p>
+          <div className="admin-user">
+            <Cloche />
+            <LogoutButton onLogout={() => setUtilisateur(null)} />
+          </div>
+        </header>
+        <main className="admin-main">
+          <AdminComptes emailConnecte={utilisateur.email} />
+        </main>
+      </div>
+    );
+  }
+
+
+  
   if (utilisateur && utilisateur.role === 'ETUDIANT') {
     return <AccueilEtudiant utilisateur={utilisateur} onChangerMotDePasse={() => naviguer('/mot-de-passe')} />;
   }
@@ -122,3 +185,4 @@ export default function App() {
     </div>
   );
 }
+

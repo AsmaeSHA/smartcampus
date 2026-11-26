@@ -1,9 +1,11 @@
+
 package ma.ensakhouribga.smartcampus.espace;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EspaceRepository extends JpaRepository<Espace, Long> {
 

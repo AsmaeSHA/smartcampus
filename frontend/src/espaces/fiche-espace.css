@@ -1,0 +1,266 @@
+/* Fiche de salle : même habillage que la page d'administration.
+   --accent et --accent-clair sont posées par le composant selon le type d'espace. */
+
+.fiche-page {
+  --accent: #0f8a5f;
+  --accent-clair: #dff5e9;
+  width: 100%;
+}
+
+/* ---------- Bandeau : dégradé, rayures diagonales et halo en haut à droite ---------- */
+.fiche-hero {
+  position: relative;
+  min-height: 205px;
+  padding: 2rem 2.4rem 3rem;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(170, 240, 205, 0.55), transparent 48%),
+    repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 46px),
+    linear-gradient(110deg, #032b20 0%, #0a4c37 45%, #2f9a6c 100%);
+}
+
+.fiche-hero-contenu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.fiche-eyebrow {
+  margin: 0 0 0.6rem;
+  color: #8fe3b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fiche-hero h1 {
+  margin: 0;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.fiche-sous-titre {
+  margin: 0.6rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.88;
+}
+
+/* Onglets posés sur le bas du bandeau, comme dans l'administration */
+.fiche-onglets {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: 0.6rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  transform: translateY(50%);
+}
+
+.fiche-onglet {
+  padding: 0.6rem 1rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: rgba(3, 43, 32, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.fiche-onglet:hover { background: rgba(3, 43, 32, 0.8); }
+.fiche-onglet:focus-visible { outline: 3px solid #8fe3b8; outline-offset: 2px; }
+
+.fiche-onglet-actif {
+  color: #04281d;
+  cursor: default;
+  background: #8fe3b8;
+  border-color: #8fe3b8;
+}
+
+.fiche-onglet-actif:hover { background: #8fe3b8; }
+
+/* ---------- Contenu ---------- */
+.fiche-contenu {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.9rem 0 2.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.fiche-note {
+  margin: 0;
+  padding: 0.9rem 1.2rem;
+  color: #0a4c37;
+  background: #dff5e9;
+  border-left: 4px solid #2f9a6c;
+  border-radius: 10px;
+}
+
+/* Carte d'identité de l'espace, colorée selon le type */
+.fiche-identite {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(120deg, #fff 55%, var(--accent-clair) 100%);
+  border-radius: 16px;
+  box-shadow: inset 0 5px 0 var(--accent), 0 10px 32px rgba(10, 60, 40, 0.1);
+}
+
+.fiche-badge-type {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 3.7rem;
+  height: 3.7rem;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 16px;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.fiche-identite-texte { flex: 1 1 220px; }
+
+.fiche-type {
+  margin: 0 0 0.25rem;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.fiche-identite h2 {
+  margin: 0;
+  font-family: var(--serif, Georgia, serif);
+  font-size: 1.7rem;
+  color: var(--vert-foret, #0b3d2e);
+}
+
+.fiche-etat {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* Tuiles d'informations : icône à gauche, texte à droite */
+.fiche-tuiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fiche-tuile {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1.1rem;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: inset 4px 0 0 var(--accent), 0 6px 24px rgba(10, 60, 40, 0.08);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.fiche-tuile:hover {
+  transform: translateY(-3px);
+  box-shadow: inset 4px 0 0 var(--accent), 0 12px 30px rgba(10, 60, 40, 0.14);
+}
+
+.fiche-icone {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  color: var(--accent);
+  background: var(--accent-clair);
+  border-radius: 12px;
+}
+
+.fiche-tuile-texte {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.fiche-libelle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.6;
+}
+
+.fiche-valeur {
+  font-family: var(--serif, Georgia, serif);
+  font-size: 1.1rem;
+  line-height: 1.2;
+  color: var(--vert-foret, #0b3d2e);
+}
+
+.fiche-valeur .etat {
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.fiche-relatif {
+  min-height: 1.1em;
+  font-size: 0.78rem;
+  opacity: 0.65;
+}
+
+/* Chargement et erreurs */
+.fiche-simple {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 0;
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
+/* Apparition douce */
+@keyframes fiche-monte {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+.fiche-hero-contenu,
+.fiche-identite,
+.fiche-tuile { animation: fiche-monte 0.5s ease both; }
+.fiche-identite { animation-delay: 0.08s; }
+.fiche-tuile:nth-child(1) { animation-delay: 0.16s; }
+.fiche-tuile:nth-child(2) { animation-delay: 0.22s; }
+.fiche-tuile:nth-child(3) { animation-delay: 0.28s; }
+.fiche-tuile:nth-child(4) { animation-delay: 0.34s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fiche-hero-contenu, .fiche-identite, .fiche-tuile { animation: none; }
+  .fiche-tuile, .fiche-onglet { transition: none; }
+}
+
+@media (max-width: 640px) {
+  .fiche-tuiles { grid-template-columns: 1fr; }
+  .fiche-hero { padding: 2rem 1.25rem 0; }
+  .fiche-contenu, .fiche-onglets { padding-left: 1rem; padding-right: 1rem; }
+  .fiche-identite { padding: 1.25rem; }
+}

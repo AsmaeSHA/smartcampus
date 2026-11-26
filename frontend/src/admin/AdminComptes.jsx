@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CreerCompteForm from './CreerCompteForm.jsx';
 import CreerEspaceForm from './CreerEspaceForm.jsx';
@@ -31,6 +32,12 @@ export default function AdminComptes({ emailConnecte }) {
   const [actualisationEspaces, setActualisationEspaces] = useState(0);
   const [archivageId, setArchivageId] = useState(null);
 
+  const [ongletActif, setOngletActif] = useState(() =>
+    new URLSearchParams(window.location.search).get('onglet') === 'comptes'
+      ? 'comptes'
+      : 'espaces'
+  );
+
   const charger = useCallback(async () => {
     setChargement(true);
     try {
@@ -38,10 +45,12 @@ export default function AdminComptes({ emailConnecte }) {
         fetch('/api/admin/comptes'),
         fetch('/api/admin/niveaux'),
       ]);
+
       if (!rComptes.ok || !rNiveaux.ok) {
         setErreur('Impossible de charger les comptes. Votre session a peut-être expiré.');
         return;
       }
+
       setComptes(await rComptes.json());
       setNiveaux(await rNiveaux.json());
       setErreur('');
@@ -52,11 +61,22 @@ export default function AdminComptes({ emailConnecte }) {
     }
   }, []);
 
-  useEffect(() => { charger(); }, [charger]);
+  useEffect(() => {
+    charger();
+  }, [charger]);
 
   const compteurs = useMemo(() => {
-    const resultat = { TOUS: comptes.length, ETUDIANT: 0, ENSEIGNANT: 0, ADMINISTRATEUR: 0 };
-    comptes.forEach((compte) => { resultat[compte.role] += 1; });
+    const resultat = {
+      TOUS: comptes.length,
+      ETUDIANT: 0,
+      ENSEIGNANT: 0,
+      ADMINISTRATEUR: 0,
+    };
+
+    comptes.forEach((compte) => {
+      resultat[compte.role] += 1;
+    });
+
     return resultat;
   }, [comptes]);
 
@@ -66,9 +86,15 @@ export default function AdminComptes({ emailConnecte }) {
     setEspaceEnModification(null);
   }
 
+  function changerOnglet(valeur) {
+    setOngletActif(valeur);
+    window.history.replaceState({}, '', `/accueil?onglet=${valeur}`);
+  }
+
   function compteCree(resultat) {
     fermerPanneau();
     setDernierCree(resultat);
+    setDernierReinitialise(null);
     setCopie(false);
     charger();
   }
@@ -99,14 +125,21 @@ export default function AdminComptes({ emailConnecte }) {
     if (!window.confirm(`Archiver l’espace ${espace.code} ? Il ne sera plus proposé à la réservation.`)) {
       return;
     }
+
     setArchivageId(espace.id);
+
     try {
-      const response = await fetch(`/api/espaces/${espace.id}/archiver`, { method: 'PATCH' });
+      const response = await fetch(`/api/espaces/${espace.id}/archiver`, {
+        method: 'PATCH',
+      });
+
       const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
         setErreur(data.message || 'Archivage impossible. Réessayez plus tard.');
         return;
       }
+
       setErreur('');
       espaceArchive(data);
     } catch (error) {
@@ -120,6 +153,7 @@ export default function AdminComptes({ emailConnecte }) {
     try {
       const response = await fetch(`/api/admin/comptes/${compte.id}`);
       const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
         setErreur(data.message || 'Impossible de charger ce compte.');
         return;
@@ -135,40 +169,78 @@ export default function AdminComptes({ emailConnecte }) {
   function compteModifie(resultat) {
     fermerPanneau();
     setMessage(`Le compte de ${resultat.prenom} ${resultat.nom} a été modifié.`);
-    setComptes((liste) => liste.map((compte) => compte.id === resultat.id ? resultat : compte));
+    setComptes((liste) =>
+      liste.map((compte) => compte.id === resultat.id ? resultat : compte)
+    );
   }
 
   async function changerActivation(compte) {
     const action = compte.actif ? 'desactiver' : 'reactiver';
-    if (!window.confirm(compte.actif
-      ? `Désactiver le compte de ${compte.prenom} ${compte.nom} ?`
-      : `Réactiver le compte de ${compte.prenom} ${compte.nom} ?`)) return;
+
+    if (!window.confirm(
+      compte.actif
+        ? `Désactiver le compte de ${compte.prenom} ${compte.nom} ?`
+        : `Réactiver le compte de ${compte.prenom} ${compte.nom} ?`
+    )) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/admin/comptes/${compte.id}/${action}`, { method: 'PATCH' });
+      const response = await fetch(
+        `/api/admin/comptes/${compte.id}/${action}`,
+        { method: 'PATCH' }
+      );
+
       const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
         setErreur(data.message || 'Action impossible. Réessayez plus tard.');
         return;
       }
-      setComptes((liste) => liste.map((element) => element.id === data.id ? data : element));
-      setMessage(`Le compte de ${data.prenom} ${data.nom} a été ${data.actif ? 'réactivé' : 'désactivé'}.`);
+
+      setComptes((liste) =>
+        liste.map((element) => element.id === data.id ? data : element)
+      );
+
+      setMessage(
+        `Le compte de ${data.prenom} ${data.nom} a été ${data.actif ? 'réactivé' : 'désactivé'}.`
+      );
     } catch (error) {
       setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
     }
   }
 
   async function reinitialiserMotDePasse(compte) {
-    if (!window.confirm(`Générer un mot de passe provisoire pour ${compte.prenom} ${compte.nom} ?`)) return;
+    if (!window.confirm(
+      `Générer un mot de passe provisoire pour ${compte.prenom} ${compte.nom} ?`
+    )) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/admin/comptes/${compte.id}/reinitialiser-mot-de-passe`, { method: 'POST' });
+      const response = await fetch(
+        `/api/admin/comptes/${compte.id}/reinitialiser-mot-de-passe`,
+        { method: 'POST' }
+      );
+
       const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
         setErreur(data.message || 'Réinitialisation impossible.');
         return;
       }
-      setDernierReinitialise(data);
+
+      setErreur('');
+      setMessage('');
+      setDernierCree(null);
       setCopie(false);
-      setComptes((liste) => liste.map((element) => element.id === data.compte.id ? data.compte : element));
+      setDernierReinitialise(data);
+
+      setComptes((liste) =>
+        liste.map((element) =>
+          element.id === data.compte.id ? data.compte : element
+        )
+      );
     } catch (error) {
       setErreur('Le serveur ne répond pas. Vérifiez que le backend est démarré.');
     }
@@ -190,64 +262,223 @@ export default function AdminComptes({ emailConnecte }) {
           <div>
             <p className="surtitre">Administration</p>
             <h1>Gestion des comptes et des espaces</h1>
-            <p className="bandeau-texte">{compteurs.TOUS} compte{compteurs.TOUS > 1 ? 's' : ''}</p>
+            <p className="bandeau-texte">
+              {compteurs.TOUS} compte{compteurs.TOUS > 1 ? 's' : ''}
+            </p>
           </div>
+
           <div className="bandeau-actions">
-            <button type="button" className="bouton-clair" onClick={() => setPanneau('importer')}>Importer un CSV</button>
-            <button type="button" className="bouton-clair" onClick={() => setPanneau('espace')}>Créer un espace</button>
-            <button type="button" className="bouton-menthe" onClick={() => setPanneau('creer')}>Nouveau compte</button>
+            {ongletActif === 'comptes' ? (
+              <>
+                <button
+                  type="button"
+                  className="bouton-clair"
+                  onClick={() => setPanneau('importer')}
+                >
+                  Importer un CSV
+                </button>
+
+                <button
+                  type="button"
+                  className="bouton-menthe"
+                  onClick={() => setPanneau('creer')}
+                >
+                  Nouveau compte
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="bouton-menthe"
+                onClick={() => setPanneau('espace')}
+              >
+                Créer un espace
+              </button>
+            )}
           </div>
         </div>
       </section>
 
       <div className="admin-contenu">
-        <div className="tuiles" role="group" aria-label="Filtrer par rôle">
-          {TUILES.map((tuile) => (
-            <button key={tuile.role} type="button" className={filtreRole === tuile.role ? 'tuile active' : 'tuile'}
-              aria-pressed={filtreRole === tuile.role} onClick={() => setFiltreRole(tuile.role)}>
-              <span className="tuile-nombre">{compteurs[tuile.role]}</span>
-              <span className="tuile-libelle">{tuile.libelle}</span>
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button
+            type="button"
+            className={ongletActif === 'comptes' ? 'bouton-menthe' : 'bouton-clair'}
+            onClick={() => changerOnglet('comptes')}
+          >
+            Gérer les comptes
+          </button>
+
+          <button
+            type="button"
+            className={ongletActif === 'espaces' ? 'bouton-menthe' : 'bouton-clair'}
+            onClick={() => changerOnglet('espaces')}
+          >
+            Gérer les espaces
+          </button>
         </div>
 
-        {erreur && <p role="alert" className="alerte alerte-erreur">{erreur}</p>}
-        {message && <p role="status" className="alerte alerte-succes">{message}
-          <button type="button" className="alerte-fermer" onClick={() => setMessage('')} aria-label="Fermer">×</button>
-        </p>}
-        {dernierCree && (
-          <div role="status" className="alerte alerte-succes alerte-mot-de-passe">
-            <p>Compte créé pour <strong>{dernierCree.compte.email}</strong>. Transmettez ce mot de passe temporaire.</p>
-            <code>{dernierCree.motDePasseTemporaire}</code>
-            <button type="button" className="bouton-secondaire" onClick={() => copier(dernierCree.motDePasseTemporaire)}>{copie ? 'Copié ✓' : 'Copier'}</button>
+        {erreur && (
+          <p role="alert" className="alerte alerte-erreur">
+            {erreur}
+          </p>
+        )}
+
+        {ongletActif === 'comptes' && (
+          <>
+            <div className="tuiles" role="group" aria-label="Filtrer par rôle">
+              {TUILES.map((tuile) => (
+                <button
+                  key={tuile.role}
+                  type="button"
+                  className={filtreRole === tuile.role ? 'tuile active' : 'tuile'}
+                  aria-pressed={filtreRole === tuile.role}
+                  onClick={() => setFiltreRole(tuile.role)}
+                >
+                  <span className="tuile-nombre">{compteurs[tuile.role]}</span>
+                  <span className="tuile-libelle">{tuile.libelle}</span>
+                </button>
+              ))}
+            </div>
+
+            {message && (
+              <p role="status" className="alerte alerte-succes">
+                {message}
+                <button
+                  type="button"
+                  className="alerte-fermer"
+                  onClick={() => setMessage('')}
+                  aria-label="Fermer"
+                >
+                  ×
+                </button>
+              </p>
+            )}
+
+            {dernierCree && (
+              <div role="status" className="alerte alerte-succes alerte-mot-de-passe">
+                <p>
+                  Compte créé pour <strong>{dernierCree.compte.email}</strong>.
+                  Transmettez ce mot de passe temporaire.
+                </p>
+                <code>{dernierCree.motDePasseTemporaire}</code>
+                <button
+                  type="button"
+                  className="bouton-secondaire"
+                  onClick={() => copier(dernierCree.motDePasseTemporaire)}
+                >
+                  {copie ? 'Copié ✓' : 'Copier'}
+                </button>
+              </div>
+            )}
+
+            {dernierReinitialise && (
+              <div role="status" className="alerte alerte-succes">
+                Mot de passe provisoire :{' '}
+                <code>{dernierReinitialise.motDePasseTemporaire}</code>
+                <button
+                  type="button"
+                  className="bouton-secondaire"
+                  onClick={() => copier(dernierReinitialise.motDePasseTemporaire)}
+                >
+                  {copie ? 'Copié ✓' : 'Copier'}
+                </button>
+              </div>
+            )}
+
+            <ListeComptes
+              comptes={comptes}
+              chargement={chargement}
+              filtreRole={filtreRole}
+              emailConnecte={emailConnecte}
+              onModifier={ouvrirModification}
+              onChangerActivation={changerActivation}
+              onReinitialiserMotDePasse={reinitialiserMotDePasse}
+              onEffacerRole={() => setFiltreRole('TOUS')}
+            />
+          </>
+        )}
+
+        {ongletActif === 'espaces' && (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '18px',
+            }}
+          >
+            {message && (
+              <p role="status" className="alerte alerte-succes">
+                {message}
+                <button
+                  type="button"
+                  className="alerte-fermer"
+                  onClick={() => setMessage('')}
+                >
+                  ×
+                </button>
+              </p>
+            )}
+
+            <ListeEspaces
+              onModifier={ouvrirModificationEspace}
+              onArchive={archiverEspace}
+              actualisation={actualisationEspaces}
+              archivageId={archivageId}
+            />
           </div>
         )}
-        {dernierReinitialise && (
-          <div role="status" className="alerte alerte-succes">
-            Mot de passe provisoire : <code>{dernierReinitialise.motDePasseTemporaire}</code>
-            <button type="button" className="bouton-secondaire" onClick={() => copier(dernierReinitialise.motDePasseTemporaire)}>{copie ? 'Copié ✓' : 'Copier'}</button>
-          </div>
-        )}
-        <ListeComptes comptes={comptes} chargement={chargement} filtreRole={filtreRole}
-          emailConnecte={emailConnecte} onModifier={ouvrirModification}
-          onChangerActivation={changerActivation} onReinitialiserMotDePasse={reinitialiserMotDePasse}
-          onEffacerRole={() => setFiltreRole('TOUS')} />
-        <ListeEspaces onModifier={ouvrirModificationEspace} onArchive={archiverEspace}
-          actualisation={actualisationEspaces} archivageId={archivageId} />
       </div>
 
       {panneau && (
         <Panneau
-          titre={panneau === 'espace' ? 'Créer un espace' : panneau === 'modifier-espace' ? 'Modifier l’espace' : panneau === 'modifier' ? 'Modifier le compte' : panneau === 'importer' ? 'Importer depuis un CSV' : 'Nouveau compte'}
-          sousTitre={panneau === 'espace' ? 'L’espace sera créé avec le statut actif.' : panneau === 'modifier-espace' ? espaceEnModification?.code : ''}
+          titre={
+            panneau === 'espace'
+              ? 'Créer un espace'
+              : panneau === 'modifier-espace'
+                ? 'Modifier l’espace'
+                : panneau === 'modifier'
+                  ? 'Modifier le compte'
+                  : panneau === 'importer'
+                    ? 'Importer depuis un CSV'
+                    : 'Nouveau compte'
+          }
+          sousTitre={
+            panneau === 'espace'
+              ? 'L’espace sera créé avec le statut actif.'
+              : panneau === 'modifier-espace'
+                ? espaceEnModification?.code
+                : ''
+          }
           onFermer={fermerPanneau}
         >
-          {panneau === 'espace' && <CreerEspaceForm onCree={espaceCree} />}
-          {panneau === 'modifier-espace' && <ModifierEspaceForm espace={espaceEnModification} onModifie={espaceModifie} onAnnuler={fermerPanneau} />}
-          {panneau === 'importer' && <ImportComptes onImporte={charger} />}
+          {panneau === 'espace' && (
+            <CreerEspaceForm onCree={espaceCree} />
+          )}
+
+          {panneau === 'modifier-espace' && (
+            <ModifierEspaceForm
+              espace={espaceEnModification}
+              onModifie={espaceModifie}
+              onAnnuler={fermerPanneau}
+            />
+          )}
+
+          {panneau === 'importer' && (
+            <ImportComptes onImporte={charger} />
+          )}
+
           {(panneau === 'creer' || panneau === 'modifier') && (
-            <CreerCompteForm niveaux={niveaux} compte={enModification} onCree={compteCree}
-              onModifie={compteModifie} onAnnuler={fermerPanneau} />
+            <CreerCompteForm
+              key={enModification ? enModification.id : 'nouveau'}
+              niveaux={niveaux}
+              compte={enModification}
+              onCree={compteCree}
+              onModifie={compteModifie}
+              onAnnuler={fermerPanneau}
+            />
           )}
         </Panneau>
       )}

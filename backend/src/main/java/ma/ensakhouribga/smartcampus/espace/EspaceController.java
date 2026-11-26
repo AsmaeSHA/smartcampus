@@ -1,8 +1,13 @@
+
 package ma.ensakhouribga.smartcampus.espace;
 
 import java.util.Map;
 import java.util.List;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import ma.ensakhouribga.smartcampus.auth.UtilisateurCourant;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,9 +28,13 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 public class EspaceController {
 
     private final EspaceService espaceService;
+    private final UtilisateurCourant utilisateurCourant;
 
-    public EspaceController(EspaceService espaceService) {
+    public EspaceController(
+            EspaceService espaceService,
+            UtilisateurCourant utilisateurCourant) {
         this.espaceService = espaceService;
+        this.utilisateurCourant = utilisateurCourant;
     }
 
     @PostMapping
@@ -34,8 +43,19 @@ public class EspaceController {
     }
 
     @GetMapping
-    public List<EspaceResume> lister() {
-        return espaceService.lister();
+    public ResponseEntity<List<EspaceResume>> lister(HttpServletRequest request) {
+        if (utilisateurCourant.profilDepuis(request).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(espaceService.lister());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EspaceResume> details(@PathVariable Long id, HttpServletRequest request) {
+        if (utilisateurCourant.profilDepuis(request).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(espaceService.trouverParId(id));
     }
 
     @PutMapping("/{id}")

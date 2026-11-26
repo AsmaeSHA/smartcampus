@@ -1,3 +1,4 @@
+
 package ma.ensakhouribga.smartcampus.espace;
 
 import jakarta.persistence.Column;
