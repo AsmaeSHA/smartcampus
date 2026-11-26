@@ -11,6 +11,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import ma.ensakhouribga.smartcampus.notification.NotificationRepository;
+import ma.ensakhouribga.smartcampus.notification.NotificationService;
+import ma.ensakhouribga.smartcampus.notification.TypeObjet;
+
 /**
  * Crée des comptes de test (données fictives) pour le développement uniquement.
  * Actif seulement avec le profil « dev » : mvn spring-boot:run -Dspring-boot.run.profiles=dev
@@ -36,11 +40,16 @@ public class DevDataLoader implements CommandLineRunner {
     private final UserRepository users;
     private final NiveauRepository niveaux;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationRepository notifications;
+    private final NotificationService notificationService;
 
-    public DevDataLoader(UserRepository users, NiveauRepository niveaux, PasswordEncoder passwordEncoder) {
+    public DevDataLoader(UserRepository users, NiveauRepository niveaux, PasswordEncoder passwordEncoder,
+                        NotificationRepository notifications, NotificationService notificationService)  {
         this.users = users;
         this.niveaux = niveaux;
         this.passwordEncoder = passwordEncoder;
+        this.notifications = notifications;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -59,6 +68,17 @@ public class DevDataLoader implements CommandLineRunner {
         if (users.findByEmail(ADMIN_EMAIL).isEmpty()) {
             users.save(new User(ADMIN_EMAIL, passwordEncoder.encode(ADMIN_PASSWORD),
                     "Admin", "Test", Role.ADMINISTRATEUR, true));
+        }
+
+        // Quelques notifications de test (SC-140), créées une seule fois.
+        for (String email : new String[] {TEST_EMAIL, ADMIN_EMAIL}) {
+            User user = users.findByEmail(email).orElseThrow();
+            if (!notifications.existsByUtilisateurId(user.getId())) {
+                notificationService.notifier(user.getId(),
+                        "Bienvenue sur SmartCampus : vos notifications apparaîtront ici.", TypeObjet.RESERVATION, null);
+                notificationService.notifier(user.getId(),
+                        "Exemple : votre demande pour l'Amphi A a été validée.", TypeObjet.RESERVATION, 1L);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 import CampusMap from './CampusMap.jsx';
 import LogoutButton from './LogoutButton.jsx';
+import Cloche from './Cloche.jsx';
 
 function Info({ label, value }) {
   return <div className="profil-info"><span>{label}</span><strong>{value || 'Non renseigné'}</strong></div>;
@@ -10,7 +11,7 @@ export default function AccueilEnseignant({ utilisateur, onChangerMotDePasse }) 
     <div className="role-shell espace-enseignant">
       <header className="role-topbar">
         <a className="brand" href="/accueil">SmartCampus</a>
-        <div className="role-user"><span>{utilisateur.prenom} {utilisateur.nom}</span><LogoutButton onLogout={() => window.location.assign('/connexion')} /></div>
+        <div className="role-user"><Cloche /><span>{utilisateur.prenom} {utilisateur.nom}</span><LogoutButton onLogout={() => window.location.assign('/connexion')} /></div>
       </header>
       <main className="role-main">
         <section className="role-hero">

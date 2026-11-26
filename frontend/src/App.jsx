@@ -8,6 +8,7 @@ import AccueilEtudiant from './AccueilEtudiant.jsx';
 import AccueilEnseignant from './AccueilEnseignant.jsx';
 import ListeEspaces from './admin/ListeEspaces.jsx';
 import DetailsEspace from './espaces/DetailsEspace.jsx';
+import Cloche from './Cloche.jsx';
 
 export default function App() {
   // undefined : vérification en cours ; null : non connecté ; objet : utilisateur connecté.
@@ -131,6 +132,7 @@ export default function App() {
         <header className="admin-top">
           <p className="brand">SmartCampus</p>
           <div className="admin-user">
+            <Cloche />
             <LogoutButton onLogout={() => setUtilisateur(null)} />
           </div>
         </header>

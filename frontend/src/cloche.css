@@ -1,0 +1,102 @@
+/* Cloche des notifications (SC-140) */
+.cloche {
+  position: relative;
+  display: inline-flex;
+}
+
+.cloche-bouton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.cloche-bouton:hover { opacity: 1; }
+
+.cloche-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #e0653a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.cloche-panneau {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #d3e1d8;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f261d;
+  box-shadow: 0 8px 24px rgba(4, 31, 23, 0.15);
+}
+
+.cloche-titre {
+  margin: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e7efea;
+  font-weight: 700;
+}
+
+.cloche-vide {
+  margin: 0;
+  padding: 16px 14px;
+  color: #4a6156;
+}
+
+.cloche-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cloche-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 1px solid #e7efea;
+  background: #fff;
+  color: #4a6156;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+.cloche-item.non-lue {
+  background: #e2f6ea;
+  color: #0f261d;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cloche-item.non-lue:hover { background: #d0efdd; }
+
+.cloche-date {
+  font-size: 12px;
+  font-weight: 400;
+  color: #4a6156;
+}
