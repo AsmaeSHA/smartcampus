@@ -29,6 +29,11 @@ public class AdminInterceptor implements HandlerInterceptor {
             refuser(response, HttpStatus.UNAUTHORIZED, "Veuillez vous connecter");
             return false;
         }
+        // SC-6 : tout utilisateur connecté peut consulter les espaces (GET).
+        // La création et la modification restent réservées à l'administrateur.
+        if ("GET".equals(request.getMethod()) && request.getRequestURI().startsWith("/api/espaces")) {
+            return true;
+        }
         if (!utilisateur.get().estAdministrateur()) {
             refuser(response, HttpStatus.FORBIDDEN, "Accès réservé à l'administrateur");
             return false;
