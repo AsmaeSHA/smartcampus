@@ -264,3 +264,9 @@
   .fiche-contenu, .fiche-onglets { padding-left: 1rem; padding-right: 1rem; }
   .fiche-identite { padding: 1.25rem; }
 }
+/* Boutons du bandeau : disponibilités et signalement */
+.fiche-hero-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

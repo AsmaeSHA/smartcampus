@@ -92,6 +92,7 @@ export default function App() {
             id={correspondance[1]}
             onRetour={retourAuxEspaces}
             onNonConnecte={() => setUtilisateur(null)}
+            peutSignaler={utilisateur.role === 'ETUDIANT' || utilisateur.role === 'ENSEIGNANT'}
           />
         </main>
       </div>
