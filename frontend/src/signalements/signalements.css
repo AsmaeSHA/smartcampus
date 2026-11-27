@@ -94,3 +94,80 @@
 .statut-en_cours { background: #fff4dc; color: #8a5a00; }
 .statut-resolu { background: #e1f5ea; color: #116b45; }
 .statut-ferme { background: #eceff1; color: #4a5560; }
+
+/* Détail et suivi d'un signalement */
+.detail-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.detail-entete h2 {
+  margin: 0.2rem 0 0;
+}
+
+.detail-description {
+  white-space: pre-wrap;
+}
+
+.detail-infos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 1rem 0;
+}
+
+.detail-infos dt {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5b6b63;
+}
+
+.detail-infos dd {
+  margin: 2px 0 0;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.detail-actions .submit {
+  width: auto;
+  padding-inline: 1.2rem;
+}
+
+.detail-signalement .field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.fil-commentaires {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  border-left: 3px solid #cfe3d8;
+}
+
+.fil-commentaires li {
+  padding: 0.4rem 0 0.6rem 0.9rem;
+}
+
+.fil-commentaires p {
+  margin: 0;
+}
+
+.fil-meta {
+  font-size: 0.85rem;
+  color: #5b6b63;
+}

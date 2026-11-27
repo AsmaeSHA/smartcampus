@@ -14,6 +14,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.List;
 import ma.ensakhouribga.smartcampus.espace.Espace;
 import ma.ensakhouribga.smartcampus.user.User;
 
@@ -74,6 +75,42 @@ public class Signalement {
         this.titre = titre;
         this.description = description;
         this.statut = StatutSignalement.OUVERT;
+    }
+
+    /**
+     * Statuts que l'administrateur peut choisir depuis le statut actuel :
+     * l'étape suivante (OUVERT → EN_COURS → RESOLU → FERME), ou FERME directement (doublon, signalement non fondé).
+     * Un signalement FERME est définitif.
+     */
+    public List<StatutSignalement> statutsPossibles() {
+        return switch (statut) {
+            case OUVERT -> List.of(StatutSignalement.EN_COURS, StatutSignalement.FERME);
+            case EN_COURS -> List.of(StatutSignalement.RESOLU, StatutSignalement.FERME);
+            case RESOLU -> List.of(StatutSignalement.FERME);
+            case FERME -> List.of();
+        };
+    }
+
+    /** Change le statut et note l'administrateur qui traite le signalement. */
+    public void changerStatut(StatutSignalement nouveau, User administrateur) {
+        if (!statutsPossibles().contains(nouveau)) {
+            throw new TransitionSignalementException(statut == StatutSignalement.FERME
+                    ? "Ce signalement est fermé : il ne peut plus changer de statut"
+                    : "Passage de " + statut + " à " + nouveau + " impossible");
+        }
+        this.statut = nouveau;
+        this.traitePar = administrateur;
+        if (nouveau == StatutSignalement.FERME) {
+            this.fermeLe = LocalDateTime.now();
+        }
+    }
+
+    public boolean estFerme() {
+        return statut == StatutSignalement.FERME;
+    }
+
+    public boolean estAuteur(Long utilisateurId) {
+        return signalePar.getId().equals(utilisateurId);
     }
 
     @PrePersist

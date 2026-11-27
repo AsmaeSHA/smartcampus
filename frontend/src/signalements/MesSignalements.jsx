@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BadgeStatut, LIBELLES_CATEGORIE, formaterDateHeure } from './libelles.jsx';
+import DetailSignalement from './DetailSignalement.jsx';
 import './signalements.css';
 
 // « Mes signalements » : les signalements de l'étudiant ou de l'enseignant connecté, avec leur statut.
@@ -8,6 +9,7 @@ export default function MesSignalements({ onNonConnecte }) {
   const [signalements, setSignalements] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
+  const [selection, setSelection] = useState(null);
 
   const nonConnecteRef = useRef(onNonConnecte);
   nonConnecteRef.current = onNonConnecte;
@@ -39,6 +41,10 @@ export default function MesSignalements({ onNonConnecte }) {
     };
   }, []);
 
+  if (selection) {
+    return <DetailSignalement id={selection} onRetour={() => setSelection(null)} />;
+  }
+
   return (
     <section className="card liste-signalements" aria-labelledby="titre-mes-signalements">
       <h2 id="titre-mes-signalements">Mes signalements</h2>
@@ -57,6 +63,7 @@ export default function MesSignalements({ onNonConnecte }) {
                 <th scope="col">Catégorie</th>
                 <th scope="col">Titre</th>
                 <th scope="col">Statut</th>
+                <th scope="col"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -67,6 +74,9 @@ export default function MesSignalements({ onNonConnecte }) {
                   <td>{LIBELLES_CATEGORIE[s.categorie] || s.categorie}</td>
                   <td>{s.titre}</td>
                   <td><BadgeStatut statut={s.statut} /></td>
+                  <td>
+                    <button type="button" className="action" onClick={() => setSelection(s.id)}>Voir le suivi</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

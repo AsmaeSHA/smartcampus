@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BadgeStatut, LIBELLES_CATEGORIE, LIBELLES_STATUT, formaterDateHeure } from './libelles.jsx';
+import DetailSignalement from './DetailSignalement.jsx';
 import './signalements.css';
 
 // Onglet admin « Signalements » : tous les signalements, filtrables par statut, catégorie et espace.
@@ -12,6 +13,8 @@ export default function ListeSignalementsAdmin() {
   const [signalements, setSignalements] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
+  const [selection, setSelection] = useState(null);
+  const [actualisation, setActualisation] = useState(0);
 
   useEffect(() => {
     fetch('/api/espaces', { credentials: 'include' })
@@ -40,9 +43,16 @@ export default function ListeSignalementsAdmin() {
     return () => {
       actif = false;
     };
-  }, [statut, categorie, espaceId]);
+  }, [statut, categorie, espaceId, actualisation]);
 
   const filtreActif = statut || categorie || espaceId;
+
+  if (selection) {
+    return (
+      <DetailSignalement id={selection} admin onRetour={() => setSelection(null)}
+        onModifie={() => setActualisation((n) => n + 1)} />
+    );
+  }
 
   return (
     <section className="card liste-signalements" aria-labelledby="titre-signalements-admin">
@@ -101,6 +111,7 @@ export default function ListeSignalementsAdmin() {
                 <th scope="col">Titre</th>
                 <th scope="col">Signalé par</th>
                 <th scope="col">Statut</th>
+                <th scope="col"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -115,6 +126,11 @@ export default function ListeSignalementsAdmin() {
                   </td>
                   <td>{s.auteur}</td>
                   <td><BadgeStatut statut={s.statut} /></td>
+                  <td>
+                    <button type="button" className="action" onClick={() => setSelection(s.id)}>
+                      {s.statut === 'FERME' ? 'Voir' : 'Traiter'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
