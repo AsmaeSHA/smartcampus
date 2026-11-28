@@ -1,0 +1,173 @@
+/* Formulaire de signalement : réutilise .card, .field, .error et .succes de App.css */
+.signalement-carte {
+  margin-top: 1.2rem;
+}
+
+.signalement-carte .field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.signalement-carte .field textarea:focus {
+  outline: 2px solid var(--accent, #0f8a5f);
+  outline-offset: 1px;
+}
+
+.champ-erreur {
+  margin: 4px 0 0;
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.signalement-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.signalement-actions .submit {
+  width: auto;
+  padding-inline: 1.2rem;
+}
+
+/* Listes de signalements (« Mes signalements » et onglet admin) */
+.liste-signalements table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.liste-signalements th,
+.liste-signalements td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e3e8e5;
+  text-align: left;
+  vertical-align: top;
+}
+
+.liste-signalements th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5b6b63;
+}
+
+.description-courte {
+  display: block;
+  margin-top: 2px;
+  color: #5b6b63;
+  font-size: 0.85rem;
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filtres-signalements {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.filtres-signalements .field {
+  min-width: 170px;
+  margin: 0;
+}
+
+.statut-signalement {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statut-ouvert { background: #fdecea; color: #a8281e; }
+.statut-en_cours { background: #fff4dc; color: #8a5a00; }
+.statut-resolu { background: #e1f5ea; color: #116b45; }
+.statut-ferme { background: #eceff1; color: #4a5560; }
+
+/* Détail et suivi d'un signalement */
+.detail-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.detail-entete h2 {
+  margin: 0.2rem 0 0;
+}
+
+.detail-description {
+  white-space: pre-wrap;
+}
+
+.detail-infos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 1rem 0;
+}
+
+.detail-infos dt {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5b6b63;
+}
+
+.detail-infos dd {
+  margin: 2px 0 0;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.detail-actions .submit {
+  width: auto;
+  padding-inline: 1.2rem;
+}
+
+.detail-signalement .field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.fil-commentaires {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  border-left: 3px solid #cfe3d8;
+}
+
+.fil-commentaires li {
+  padding: 0.4rem 0 0.6rem 0.9rem;
+}
+
+.fil-commentaires p {
+  margin: 0;
+}
+
+.fil-meta {
+  font-size: 0.85rem;
+  color: #5b6b63;
+}
