@@ -18,10 +18,7 @@
 
   <properties>
     <java.version>17</java.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <maven.compiler.release>17</maven.compiler.release>
-</properties>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -67,9 +64,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <mainClass>ma.ensakhouribga.smartcampus.SmartCampusApplication</mainClass>
-        </configuration>
       </plugin>
     </plugins>
   </build>
