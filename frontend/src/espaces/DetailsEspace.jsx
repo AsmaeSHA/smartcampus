@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './fiche-espace.css';
 import SignalerProbleme from '../signalements/SignalerProbleme.jsx';
+import DemanderReservation from '../reservations/DemanderReservation.jsx';
 
 // Fiche de salle (SC-15) : code, nom, type, état, dates, et accès aux disponibilités (SC-87).
 // Même habillage que la page d'administration. Chaque type d'espace a sa couleur et son icône.
@@ -69,12 +70,12 @@ function ilYa(valeur) {
   return rtf.format(jours, 'day');
 }
 
-export default function DetailsEspace({ id, onRetour, onNonConnecte, peutSignaler = false }) {
+export default function DetailsEspace({ id, onRetour, onNonConnecte, onReservationCreee, peutSignaler = false, peutReserver = false }) {
   const [espace, setEspace] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
-  const [bientot, setBientot] = useState(false);
   const [signalementOuvert, setSignalementOuvert] = useState(false);
+  const [reservationOuverte, setReservationOuverte] = useState(false);
 
   const nonConnecteRef = useRef(onNonConnecte);
   nonConnecteRef.current = onNonConnecte;
@@ -85,7 +86,6 @@ export default function DetailsEspace({ id, onRetour, onNonConnecte, peutSignale
     async function chargerDetails() {
       setChargement(true);
       setErreur('');
-      setBientot(false);
       try {
         const res = await fetch(`/api/espaces/${id}`, { credentials: 'include' });
 
@@ -153,9 +153,7 @@ export default function DetailsEspace({ id, onRetour, onNonConnecte, peutSignale
             <p className="fiche-sous-titre">{espace.nom} · {espace.code}</p>
           </div>
           <div className="fiche-hero-actions">
-            <button type="button" className="bouton-menthe" onClick={() => setBientot(true)}>
-              Voir les disponibilités
-            </button>
+            {peutReserver && actif && <button type="button" className="bouton-menthe" onClick={() => setReservationOuverte(true)}>Demander une réservation</button>}
             {peutSignaler && (
               <button type="button" className="bouton-menthe" onClick={() => setSignalementOuvert(true)}>
                 Signaler un problème
@@ -173,11 +171,7 @@ export default function DetailsEspace({ id, onRetour, onNonConnecte, peutSignale
       </header>
 
       <div className="fiche-contenu">
-        {bientot && (
-          <p className="fiche-note" role="status">
-            Les disponibilités seront accessibles avec la fonctionnalité de réservation.
-          </p>
-        )}
+        {reservationOuverte && <DemanderReservation espace={espace} onFermer={() => setReservationOuverte(false)} onCreee={onReservationCreee} />}
 
         {signalementOuvert && (
           <SignalerProbleme espace={espace} onFermer={() => setSignalementOuvert(false)} />

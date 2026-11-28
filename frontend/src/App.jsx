@@ -10,6 +10,7 @@ import ListeEspaces from './admin/ListeEspaces.jsx';
 import DetailsEspace from './espaces/DetailsEspace.jsx';
 import MesSignalements from './signalements/MesSignalements.jsx';
 import Cloche from './Cloche.jsx';
+import MesReservations from './reservations/MesReservations.jsx';
 
 export default function App() {
   // undefined : vérification en cours ; null : non connecté ; objet : utilisateur connecté.
@@ -94,6 +95,8 @@ export default function App() {
             onRetour={retourAuxEspaces}
             onNonConnecte={() => setUtilisateur(null)}
             peutSignaler={utilisateur.role === 'ETUDIANT' || utilisateur.role === 'ENSEIGNANT'}
+            peutReserver={utilisateur.role === 'ETUDIANT' || utilisateur.role === 'ENSEIGNANT'}
+            onReservationCreee={() => naviguer('/reservations')}
           />
         </main>
       </div>
@@ -124,6 +127,21 @@ export default function App() {
         </header>
         <main className="admin-main">
           <MesSignalements onNonConnecte={() => setUtilisateur(null)} />
+        </main>
+      </div>
+    );
+  }
+
+  if (utilisateur && chemin === '/reservations'
+      && (utilisateur.role === 'ETUDIANT' || utilisateur.role === 'ENSEIGNANT')) {
+    return (
+      <div className="admin-shell">
+        <header className="admin-top">
+          <p className="brand">SmartCampus</p>
+          <div className="admin-user"><Cloche /><LogoutButton onLogout={() => setUtilisateur(null)} /></div>
+        </header>
+        <main className="admin-main">
+          <MesReservations onNonConnecte={() => setUtilisateur(null)} onRetour={() => naviguer('/accueil')} />
         </main>
       </div>
     );
