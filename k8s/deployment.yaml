@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartcampus
+  labels:
+    app: smartcampus
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: smartcampus
+  template:
+    metadata:
+      labels:
+        app: smartcampus
+    spec:
+      containers:
+        - name: smartcampus
+          image: smartcampus:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: smartcampus-config
+            - secretRef:
+                name: smartcampus-secret
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
