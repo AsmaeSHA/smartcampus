@@ -1,5 +1,6 @@
 import CampusMap from './CampusMap.jsx';
 import LogoutButton from './LogoutButton.jsx';
+import Cloche from './Cloche.jsx';
 
 function Info({ label, value }) {
   return <div className="profil-info"><span>{label}</span><strong>{value || 'Non renseigné'}</strong></div>;
@@ -10,7 +11,7 @@ export default function AccueilEtudiant({ utilisateur, onChangerMotDePasse }) {
     <div className="role-shell espace-etudiant">
       <header className="role-topbar">
         <a className="brand" href="/accueil">SmartCampus</a>
-        <div className="role-user"><span>{utilisateur.prenom} {utilisateur.nom}</span><LogoutButton onLogout={() => window.location.assign('/connexion')} /></div>
+        <div className="role-user"><Cloche /><span>{utilisateur.prenom} {utilisateur.nom}</span><LogoutButton onLogout={() => window.location.assign('/connexion')} /></div>
       </header>
       <main className="role-main">
         <section className="role-hero">
@@ -32,6 +33,26 @@ export default function AccueilEtudiant({ utilisateur, onChangerMotDePasse }) {
             <p className="eyebrow">COMPTE</p><h2>Votre sécurité</h2>
             <p>Gardez votre mot de passe confidentiel et choisissez un mot de passe difficile à deviner.</p>
             <button className="role-link-button" type="button" onClick={onChangerMotDePasse}>Changer mon mot de passe <span aria-hidden="true">→</span></button>
+            <button 
+                type="button"
+                className="action" 
+                onClick={() => {
+                  window.history.pushState({}, '', '/espaces');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+              >
+                Consulter les espaces
+              </button>
+            <button
+                type="button"
+                className="action"
+                onClick={() => {
+                  window.history.pushState({}, '', '/signalements');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+              >
+                Mes signalements
+              </button>
           </aside>
         </section>
         <footer className="role-footer">SmartCampus <span>·</span> Votre campus, au même endroit.</footer>
