@@ -53,6 +53,9 @@ export default function AccueilEtudiant({ utilisateur, onChangerMotDePasse }) {
               >
                 Mes signalements
               </button>
+            <button type="button" className="action" onClick={() => { window.history.pushState({}, '', '/reservations'); window.dispatchEvent(new PopStateEvent('popstate')); }}>
+              Mes réservations
+            </button>
           </aside>
         </section>
         <footer className="role-footer">SmartCampus <span>·</span> Votre campus, au même endroit.</footer>

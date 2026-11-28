@@ -659,3 +659,35 @@ button:focus-visible {
   .role-card { padding: 20px; }
   .profil-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Réservations (SC-21/24/192) ---------- */
+.reservation-form-card { margin: 20px 0; padding: 24px; background: #f8faf6; border: 1px solid var(--line); border-radius: 8px; }
+.reservation-form-heading, .reservation-item-entete, .reservations-entete { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.reservation-form-heading h2, .reservation-item h2 { margin: 5px 0 16px; font: 500 1.45rem var(--serif); }
+.reservation-form { display: grid; gap: 16px; }
+.reservation-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.reservation-form label, .reservation-annulation label { display: grid; gap: 7px; color: var(--ink-soft); font-size: .9rem; font-weight: 500; }
+.reservation-form input, .reservation-form textarea, .reservation-annulation textarea {
+  width: 100%; padding: 11px 12px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 5px; font: inherit;
+}
+.reservation-form textarea, .reservation-annulation textarea { resize: vertical; }
+.reservation-form input:focus, .reservation-form textarea:focus, .reservation-annulation textarea:focus { outline: 2px solid var(--campus-orange); outline-offset: 1px; }
+.reservation-aide { margin: -8px 0 0; color: var(--ink-soft); font-size: .85rem; }
+.reservations-page { display: grid; gap: 20px; }
+.reservations-entete h1 { margin: 5px 0 8px; font: 500 2rem var(--serif); }
+.reservations-entete p:not(.eyebrow) { margin: 0; color: var(--ink-soft); }
+.reservations-liste { display: grid; gap: 14px; }
+.reservation-item p { color: var(--ink-soft); line-height: 1.5; }
+.reservation-item-entete h2 { margin-bottom: 6px; }
+.reservation-statut { display: inline-flex; padding: 6px 10px; border-radius: 999px; background: var(--paper-deep); font-size: .82rem; font-weight: 600; white-space: nowrap; }
+.statut-en_attente { color: #875b00; background: #fff0c2; }
+.statut-confirmee { color: #17623c; background: #d9f0df; }
+.statut-refusee, .statut-annulee { color: var(--error); background: #f8e1db; }
+.reservation-annulation { display: grid; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.reservation-annulation > div { display: flex; gap: 8px; }
+.reservation-item .action + .action { margin-left: 8px; }
+@media (max-width: 600px) {
+  .reservation-dates { grid-template-columns: 1fr; }
+  .reservation-form-card { padding: 18px; }
+  .reservations-entete { align-items: flex-start; flex-direction: column; }
+}
